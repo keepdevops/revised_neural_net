@@ -47,4 +47,6 @@ Thumbs.db
 *.m4v
 *.png
 *.gif
-*.Prediction_*/
+*.prediction_*/
+*.npz
+*.npy
