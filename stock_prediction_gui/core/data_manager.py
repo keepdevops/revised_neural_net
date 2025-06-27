@@ -351,20 +351,37 @@ class DataManager:
         """Load data from HDF5 file."""
         import h5py
         
+        def find_datasets(h5_obj, path=""):
+            """Recursively find all datasets in HDF5 file."""
+            datasets = []
+            for key in h5_obj.keys():
+                current_path = f"{path}/{key}" if path else key
+                item = h5_obj[key]
+                
+                if isinstance(item, h5py.Dataset):
+                    datasets.append((current_path, item))
+                elif isinstance(item, h5py.Group):
+                    # Recursively search groups
+                    datasets.extend(find_datasets(item, current_path))
+            
+            return datasets
+        
         with h5py.File(file_path, 'r') as f:
-            # Get dataset names
-            datasets = list(f.keys())
+            # Find all datasets in the file
+            datasets = find_datasets(f)
             
             if not datasets:
                 raise ValueError("No datasets found in HDF5 file")
             
             # Load first dataset
-            dataset_name = datasets[0]
-            data = f[dataset_name][:]
+            dataset_path, dataset_obj = datasets[0]
+            
+            # Load the dataset data
+            data = dataset_obj[:]
             
             # Convert to DataFrame
             if len(data.shape) == 1:
-                return pd.DataFrame({dataset_name: data})
+                return pd.DataFrame({dataset_path.split('/')[-1]: data})
             elif len(data.shape) == 2:
                 return pd.DataFrame(data)
             else:

@@ -137,8 +137,11 @@ class StockPredictionApp:
     def load_recent_files(self):
         """Load recent data files."""
         try:
-            recent_files = self.file_utils.get_recent_files()
-            self.main_window.update_recent_files(recent_files)
+            if hasattr(self, 'main_window') and self.main_window is not None:
+                recent_files = self.file_utils.get_recent_files()
+                self.main_window.update_recent_files(recent_files)
+            else:
+                self.logger.warning("Main window not yet initialized, skipping recent files load")
         except Exception as e:
             self.logger.error(f"Error loading recent files: {e}")
     
