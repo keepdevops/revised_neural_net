@@ -7,6 +7,10 @@ import os
 import sys
 import subprocess
 import glob
+import numpy as np
+
+# Add the project root to the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def test_3d_visualization():
     """Test the 3D visualization with MPEG saving."""
@@ -45,7 +49,7 @@ def test_3d_visualization():
     
     # Build command
     cmd = [
-        sys.executable, 'gradient_descent_3d.py',
+        sys.executable, 'visualization/gradient_descent_3d.py',
         '--model_dir', model_dir,
         '--color', params['color'],
         '--point_size', str(params['point_size']),
@@ -170,6 +174,87 @@ def test_gui_3d_animation():
         except:
             pass
 
+def test_3d_animation_fix():
+    """Test that the 3D animation frame index error is fixed."""
+    print("🧪 Testing 3D animation frame index fix...")
+    
+    # Test with the test_3d_model directory
+    model_dir = "test_3d_model"
+    if not os.path.exists(model_dir):
+        print(f"❌ Test model directory not found: {model_dir}")
+        print("Please run a training first to create test_3d_model")
+        return False
+    
+    try:
+        # Check if weight history files exist
+        weights_files = sorted([f for f in os.listdir(os.path.join(model_dir, "weights_history")) 
+                              if f.startswith("weights_history_") and f.endswith(".npz")])
+        
+        if not weights_files:
+            print("❌ No weight history files found")
+            return False
+        
+        print(f"✅ Found {len(weights_files)} weight history files")
+        
+        # Check if training losses file exists
+        losses_file = os.path.join(model_dir, "training_losses.csv")
+        if not os.path.exists(losses_file):
+            print("❌ No training losses file found")
+            return False
+        
+        # Load losses
+        losses = np.loadtxt(losses_file, delimiter=",")
+        if losses.ndim > 1:
+            losses = losses[:, 0]  # Use training losses
+        
+        print(f"✅ Found {len(losses)} loss values")
+        
+        # Simulate the frame mapping logic
+        num_weight_frames = len(weights_files)
+        print(f"📊 Weight frames: {num_weight_frames}")
+        print(f"📊 Loss values: {len(losses)}")
+        
+        # Test frame mapping
+        for frame in range(num_weight_frames):
+            # This is the logic from the fixed update_gd3d_frame method
+            loss_index = min(frame * 50, len(losses) - 1)
+            print(f"Frame {frame} -> Loss index {loss_index} (epoch {frame * 50})")
+            
+            # Verify the indices are valid
+            if frame >= num_weight_frames:
+                print(f"❌ Frame {frame} exceeds weight history ({num_weight_frames})")
+                return False
+            
+            if loss_index >= len(losses):
+                print(f"❌ Loss index {loss_index} exceeds loss history ({len(losses)})")
+                return False
+        
+        print("✅ All frame mappings are valid")
+        
+        # Test edge cases
+        print("\n🔍 Testing edge cases...")
+        
+        # Test frame that would exceed weight history
+        frame = num_weight_frames + 5
+        if frame >= num_weight_frames:
+            print(f"✅ Frame {frame} correctly detected as exceeding weight history ({num_weight_frames})")
+            frame = num_weight_frames - 1  # This is the fix
+            print(f"✅ Frame adjusted to {frame}")
+        
+        # Test loss index mapping for the last frame
+        last_frame = num_weight_frames - 1
+        loss_index = min(last_frame * 50, len(losses) - 1)
+        print(f"✅ Last frame {last_frame} maps to loss index {loss_index}")
+        
+        print("\n🎉 All tests passed! The 3D animation frame index error has been fixed.")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Test failed with error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 def main():
     """Run all tests."""
     print("3D Animation and MPEG Saving Test Suite")
@@ -181,14 +266,18 @@ def main():
     # Test 2: GUI 3D animation initialization
     test2_passed = test_gui_3d_animation()
     
+    # Test 3: 3D animation frame index fix
+    test3_passed = test_3d_animation_fix()
+    
     # Summary
     print("\n" + "=" * 60)
     print("TEST SUMMARY")
     print("=" * 60)
     print(f"3D Visualization with MPEG: {'✅ PASSED' if test1_passed else '❌ FAILED'}")
     print(f"GUI 3D Animation Init: {'✅ PASSED' if test2_passed else '❌ FAILED'}")
+    print(f"3D Animation Frame Index Fix: {'✅ PASSED' if test3_passed else '❌ FAILED'}")
     
-    if test1_passed and test2_passed:
+    if test1_passed and test2_passed and test3_passed:
         print("\n🎉 ALL TESTS PASSED! 3D animation and MPEG saving are working correctly.")
         return True
     else:

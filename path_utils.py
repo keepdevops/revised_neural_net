@@ -219,7 +219,7 @@ if __name__ == "__main__":
     print("Testing path resolution utilities...")
     
     # Test script finding
-    scripts_to_test = ['predict.py', 'gradient_descent_3d.py', 'view_results.py']
+    scripts_to_test = ['predict.py', 'visualization/gradient_descent_3d.py', 'view_results.py']
     for script in scripts_to_test:
         path = find_script(script)
         if path:

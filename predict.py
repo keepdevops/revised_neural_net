@@ -92,36 +92,93 @@ def add_technical_indicators(df):
     # Make a copy to avoid modifying original
     df_enhanced = df.copy()
     
-    # Moving averages
+    # Basic moving averages
     df_enhanced['ma_5'] = df_enhanced['close'].rolling(window=5).mean()
     df_enhanced['ma_10'] = df_enhanced['close'].rolling(window=10).mean()
     df_enhanced['ma_20'] = df_enhanced['close'].rolling(window=20).mean()
+    df_enhanced['ma_50'] = df_enhanced['close'].rolling(window=50).mean()
+    
+    # Exponential moving averages
+    df_enhanced['ema_12'] = df_enhanced['close'].ewm(span=12).mean()
+    df_enhanced['ema_26'] = df_enhanced['close'].ewm(span=26).mean()
     
     # RSI
     df_enhanced['rsi'] = compute_rsi(df_enhanced['close'], 14)
     
-    # Price changes
+    # Price changes and returns
     df_enhanced['price_change'] = df_enhanced['close'].pct_change()
     df_enhanced['price_change_5'] = df_enhanced['close'].pct_change(periods=5)
+    df_enhanced['price_change_10'] = df_enhanced['close'].pct_change(periods=10)
     
-    # Volatility (rolling standard deviation)
+    # Volatility measures
     df_enhanced['volatility_10'] = df_enhanced['close'].rolling(window=10).std()
+    df_enhanced['volatility_20'] = df_enhanced['close'].rolling(window=20).std()
     
     # Bollinger Bands
     df_enhanced['bb_middle'] = df_enhanced['close'].rolling(window=20).mean()
     bb_std = df_enhanced['close'].rolling(window=20).std()
     df_enhanced['bb_upper'] = df_enhanced['bb_middle'] + (bb_std * 2)
     df_enhanced['bb_lower'] = df_enhanced['bb_middle'] - (bb_std * 2)
+    df_enhanced['bb_width'] = (df_enhanced['bb_upper'] - df_enhanced['bb_lower']) / df_enhanced['bb_middle']
+    df_enhanced['bb_position'] = (df_enhanced['close'] - df_enhanced['bb_lower']) / (df_enhanced['bb_upper'] - df_enhanced['bb_lower'])
     
     # MACD
-    exp1 = df_enhanced['close'].ewm(span=12, adjust=False).mean()
-    exp2 = df_enhanced['close'].ewm(span=26, adjust=False).mean()
+    exp1 = df_enhanced['close'].ewm(span=12).mean()
+    exp2 = df_enhanced['close'].ewm(span=26).mean()
     df_enhanced['macd'] = exp1 - exp2
-    df_enhanced['macd_signal'] = df_enhanced['macd'].ewm(span=9, adjust=False).mean()
+    df_enhanced['macd_signal'] = df_enhanced['macd'].ewm(span=9).mean()
+    df_enhanced['macd_histogram'] = df_enhanced['macd'] - df_enhanced['macd_signal']
+    
+    # Stochastic Oscillator
+    low_min = df_enhanced['low'].rolling(window=14).min()
+    high_max = df_enhanced['high'].rolling(window=14).max()
+    df_enhanced['stoch_k'] = 100 * (df_enhanced['close'] - low_min) / (high_max - low_min)
+    df_enhanced['stoch_d'] = df_enhanced['stoch_k'].rolling(window=3).mean()
+    
+    # Williams %R
+    df_enhanced['williams_r'] = -100 * (high_max - df_enhanced['close']) / (high_max - low_min)
     
     # Volume indicators
     df_enhanced['volume_ma'] = df_enhanced['vol'].rolling(window=10).mean()
     df_enhanced['volume_ratio'] = df_enhanced['vol'] / df_enhanced['volume_ma']
+    df_enhanced['volume_sma_ratio'] = df_enhanced['vol'] / df_enhanced['vol'].rolling(window=20).mean()
+    
+    # Price momentum
+    df_enhanced['momentum_5'] = df_enhanced['close'] - df_enhanced['close'].shift(5)
+    df_enhanced['momentum_10'] = df_enhanced['close'] - df_enhanced['close'].shift(10)
+    
+    # Rate of change
+    df_enhanced['roc_5'] = ((df_enhanced['close'] - df_enhanced['close'].shift(5)) / df_enhanced['close'].shift(5)) * 100
+    df_enhanced['roc_10'] = ((df_enhanced['close'] - df_enhanced['close'].shift(10)) / df_enhanced['close'].shift(10)) * 100
+    
+    # Average True Range (ATR)
+    high_low = df_enhanced['high'] - df_enhanced['low']
+    high_close = np.abs(df_enhanced['high'] - df_enhanced['close'].shift())
+    low_close = np.abs(df_enhanced['low'] - df_enhanced['close'].shift())
+    true_range = np.maximum(high_low, np.maximum(high_close, low_close))
+    df_enhanced['atr'] = true_range.rolling(window=14).mean()
+    
+    # Commodity Channel Index (CCI)
+    typical_price = (df_enhanced['high'] + df_enhanced['low'] + df_enhanced['close']) / 3
+    sma_tp = typical_price.rolling(window=20).mean()
+    mad = typical_price.rolling(window=20).apply(lambda x: np.mean(np.abs(x - x.mean())))
+    df_enhanced['cci'] = (typical_price - sma_tp) / (0.015 * mad)
+    
+    # Money Flow Index (MFI)
+    typical_price = (df_enhanced['high'] + df_enhanced['low'] + df_enhanced['close']) / 3
+    money_flow = typical_price * df_enhanced['vol']
+    
+    positive_flow = money_flow.where(typical_price > typical_price.shift(1), 0).rolling(window=14).sum()
+    negative_flow = money_flow.where(typical_price < typical_price.shift(1), 0).rolling(window=14).sum()
+    
+    mfi_ratio = positive_flow / negative_flow
+    df_enhanced['mfi'] = 100 - (100 / (1 + mfi_ratio))
+    
+    # Support and Resistance levels (simplified)
+    df_enhanced['support_20'] = df_enhanced['low'].rolling(window=20).min()
+    df_enhanced['resistance_20'] = df_enhanced['high'].rolling(window=20).max()
+    df_enhanced['price_to_support'] = (df_enhanced['close'] - df_enhanced['support_20']) / df_enhanced['support_20']
+    df_enhanced['price_to_resistance'] = (df_enhanced['resistance_20'] - df_enhanced['close']) / df_enhanced['close']
     
     return df_enhanced
 
@@ -239,21 +296,8 @@ class StockPredictor:
     def _load_normalization_from_csv(self, model_dir):
         """Load normalization parameters from separate CSV files."""
         try:
-            # Load standardization parameters (mean and std)
-            scaler_mean_file = os.path.join(model_dir, 'scaler_mean.csv')
-            scaler_std_file = os.path.join(model_dir, 'scaler_std.csv')
-            
-            if os.path.exists(scaler_mean_file) and os.path.exists(scaler_std_file):
-                self.X_mean = np.loadtxt(scaler_mean_file)
-                self.X_std = np.loadtxt(scaler_std_file)
-                self.use_standardization = True
-                print(f"Loaded standardization parameters: mean={self.X_mean}, std={self.X_std}")
-            else:
-                # Fallback to min-max normalization if standardization files don't exist
-                self.use_standardization = False
-                print("Standardization files not found, using min-max normalization")
-            
-            # Load target normalization parameters
+            # Load min-max normalization parameters for input features
+            # The training script uses min-max normalization, not standardization
             target_min_file = os.path.join(model_dir, 'target_min.csv')
             target_max_file = os.path.join(model_dir, 'target_max.csv')
             
@@ -267,12 +311,19 @@ class StockPredictor:
                 self.Y_max = None
                 self.has_target_norm = False
                 print("Target normalization files not found")
+            
+            # For input features, we'll use the same min-max approach as training
+            # The training data is already normalized to [0,1] range
+            self.X_min = np.zeros(4)  # Assuming 4 features: open, high, low, vol
+            self.X_max = np.ones(4)
+            self.use_standardization = False
+            print(f"Using min-max normalization for input features: min={self.X_min}, max={self.X_max}")
                 
         except Exception as e:
             print(f"Error loading normalization parameters: {e}")
             # Set default values to prevent crashes
-            self.X_mean = None
-            self.X_std = None
+            self.X_min = np.zeros(4)
+            self.X_max = np.ones(4)
             self.use_standardization = False
             self.Y_min = None
             self.Y_max = None
@@ -292,7 +343,8 @@ class StockPredictor:
         z1 = np.dot(X, self.W1) + self.b1
         a1 = sigmoid(z1)
         z2 = np.dot(a1, self.W2) + self.b2
-        predictions = sigmoid(z2)
+        # Use linear activation for output layer (no sigmoid) for regression
+        predictions = z2  # Linear activation for regression
         
         return predictions
 

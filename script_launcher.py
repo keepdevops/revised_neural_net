@@ -156,7 +156,7 @@ class ScriptLauncher:
         Returns:
             dict: Dictionary with script names as keys and availability as values
         """
-        required_scripts = ['predict.py', 'gradient_descent_3d.py', 'view_results.py']
+        required_scripts = ['predict.py', 'visualization/gradient_descent_3d.py', 'view_results.py']
         results = {}
         
         for script in required_scripts:
@@ -211,7 +211,7 @@ def launch_gradient_descent(model_dir, save_png=True, **kwargs):
             args.extend([f'--{key}', str(value)])
     
     # Use longer timeout for gradient descent visualization (120 seconds)
-    return launcher.launch_script('gradient_descent_3d.py', args, timeout=120)
+    return launcher.launch_script('visualization/gradient_descent_3d.py', args, timeout=120)
 
 def launch_prediction(data_file, model_dir, x_features, y_feature):
     """Launch the prediction script."""
@@ -277,7 +277,7 @@ def launch_3d_visualization(model_dir, params):
     print(f"📋 Parameters: {params}")
     
     cmd = [
-        sys.executable, 'gradient_descent_3d.py',
+        sys.executable, 'visualization/gradient_descent_3d.py',
         '--model_dir', model_dir,
         '--color', params['color'],
         '--point_size', str(params['point_size']),
@@ -328,7 +328,7 @@ def test_launcher():
     
     # Test help for gradient descent
     print("\n3. Testing gradient descent help:")
-    help_text = launcher.get_script_help('gradient_descent_3d.py')
+    help_text = launcher.get_script_help('visualization/gradient_descent_3d.py')
     if '--save_png' in help_text:
         print("   ✅ Gradient descent script supports --save_png")
     else:

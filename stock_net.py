@@ -145,36 +145,93 @@ def add_technical_indicators(df):
     # Make a copy to avoid modifying original
     df_enhanced = df.copy()
     
-    # Moving averages
+    # Basic moving averages
     df_enhanced['ma_5'] = df_enhanced['close'].rolling(window=5).mean()
     df_enhanced['ma_10'] = df_enhanced['close'].rolling(window=10).mean()
     df_enhanced['ma_20'] = df_enhanced['close'].rolling(window=20).mean()
+    df_enhanced['ma_50'] = df_enhanced['close'].rolling(window=50).mean()
+    
+    # Exponential moving averages
+    df_enhanced['ema_12'] = df_enhanced['close'].ewm(span=12).mean()
+    df_enhanced['ema_26'] = df_enhanced['close'].ewm(span=26).mean()
     
     # RSI
     df_enhanced['rsi'] = compute_rsi(df_enhanced['close'], 14)
     
-    # Price changes
+    # Price changes and returns
     df_enhanced['price_change'] = df_enhanced['close'].pct_change()
     df_enhanced['price_change_5'] = df_enhanced['close'].pct_change(periods=5)
+    df_enhanced['price_change_10'] = df_enhanced['close'].pct_change(periods=10)
     
-    # Volatility (rolling standard deviation)
+    # Volatility measures
     df_enhanced['volatility_10'] = df_enhanced['close'].rolling(window=10).std()
+    df_enhanced['volatility_20'] = df_enhanced['close'].rolling(window=20).std()
     
     # Bollinger Bands
     df_enhanced['bb_middle'] = df_enhanced['close'].rolling(window=20).mean()
     bb_std = df_enhanced['close'].rolling(window=20).std()
     df_enhanced['bb_upper'] = df_enhanced['bb_middle'] + (bb_std * 2)
     df_enhanced['bb_lower'] = df_enhanced['bb_middle'] - (bb_std * 2)
+    df_enhanced['bb_width'] = (df_enhanced['bb_upper'] - df_enhanced['bb_lower']) / df_enhanced['bb_middle']
+    df_enhanced['bb_position'] = (df_enhanced['close'] - df_enhanced['bb_lower']) / (df_enhanced['bb_upper'] - df_enhanced['bb_lower'])
     
     # MACD
-    exp1 = df_enhanced['close'].ewm(span=12, adjust=False).mean()
-    exp2 = df_enhanced['close'].ewm(span=26, adjust=False).mean()
+    exp1 = df_enhanced['close'].ewm(span=12).mean()
+    exp2 = df_enhanced['close'].ewm(span=26).mean()
     df_enhanced['macd'] = exp1 - exp2
-    df_enhanced['macd_signal'] = df_enhanced['macd'].ewm(span=9, adjust=False).mean()
+    df_enhanced['macd_signal'] = df_enhanced['macd'].ewm(span=9).mean()
+    df_enhanced['macd_histogram'] = df_enhanced['macd'] - df_enhanced['macd_signal']
+    
+    # Stochastic Oscillator
+    low_min = df_enhanced['low'].rolling(window=14).min()
+    high_max = df_enhanced['high'].rolling(window=14).max()
+    df_enhanced['stoch_k'] = 100 * (df_enhanced['close'] - low_min) / (high_max - low_min)
+    df_enhanced['stoch_d'] = df_enhanced['stoch_k'].rolling(window=3).mean()
+    
+    # Williams %R
+    df_enhanced['williams_r'] = -100 * (high_max - df_enhanced['close']) / (high_max - low_min)
     
     # Volume indicators
     df_enhanced['volume_ma'] = df_enhanced['vol'].rolling(window=10).mean()
     df_enhanced['volume_ratio'] = df_enhanced['vol'] / df_enhanced['volume_ma']
+    df_enhanced['volume_sma_ratio'] = df_enhanced['vol'] / df_enhanced['vol'].rolling(window=20).mean()
+    
+    # Price momentum
+    df_enhanced['momentum_5'] = df_enhanced['close'] - df_enhanced['close'].shift(5)
+    df_enhanced['momentum_10'] = df_enhanced['close'] - df_enhanced['close'].shift(10)
+    
+    # Rate of change
+    df_enhanced['roc_5'] = ((df_enhanced['close'] - df_enhanced['close'].shift(5)) / df_enhanced['close'].shift(5)) * 100
+    df_enhanced['roc_10'] = ((df_enhanced['close'] - df_enhanced['close'].shift(10)) / df_enhanced['close'].shift(10)) * 100
+    
+    # Average True Range (ATR)
+    high_low = df_enhanced['high'] - df_enhanced['low']
+    high_close = np.abs(df_enhanced['high'] - df_enhanced['close'].shift())
+    low_close = np.abs(df_enhanced['low'] - df_enhanced['close'].shift())
+    true_range = np.maximum(high_low, np.maximum(high_close, low_close))
+    df_enhanced['atr'] = true_range.rolling(window=14).mean()
+    
+    # Commodity Channel Index (CCI)
+    typical_price = (df_enhanced['high'] + df_enhanced['low'] + df_enhanced['close']) / 3
+    sma_tp = typical_price.rolling(window=20).mean()
+    mad = typical_price.rolling(window=20).apply(lambda x: np.mean(np.abs(x - x.mean())))
+    df_enhanced['cci'] = (typical_price - sma_tp) / (0.015 * mad)
+    
+    # Money Flow Index (MFI)
+    typical_price = (df_enhanced['high'] + df_enhanced['low'] + df_enhanced['close']) / 3
+    money_flow = typical_price * df_enhanced['vol']
+    
+    positive_flow = money_flow.where(typical_price > typical_price.shift(1), 0).rolling(window=14).sum()
+    negative_flow = money_flow.where(typical_price < typical_price.shift(1), 0).rolling(window=14).sum()
+    
+    mfi_ratio = positive_flow / negative_flow
+    df_enhanced['mfi'] = 100 - (100 / (1 + mfi_ratio))
+    
+    # Support and Resistance levels (simplified)
+    df_enhanced['support_20'] = df_enhanced['low'].rolling(window=20).min()
+    df_enhanced['resistance_20'] = df_enhanced['high'].rolling(window=20).max()
+    df_enhanced['price_to_support'] = (df_enhanced['close'] - df_enhanced['support_20']) / df_enhanced['support_20']
+    df_enhanced['price_to_resistance'] = (df_enhanced['resistance_20'] - df_enhanced['close']) / df_enhanced['close']
     
     return df_enhanced
 
@@ -358,7 +415,8 @@ class StockNet:
         self.z1 = np.dot(X, self.W1) + self.b1
         self.a1 = sigmoid(self.z1)
         self.z2 = np.dot(self.a1, self.W2) + self.b2
-        self.output = sigmoid(self.z2)
+        # Use linear activation for output layer (no sigmoid) for regression
+        self.output = self.z2  # Linear activation for regression
         
         return self.output
 
@@ -376,7 +434,8 @@ class StockNet:
         
         # Compute gradients for each layer
         self.error = y - output
-        self.delta2 = np.clip(self.error, -1, 1)  # Output layer error
+        # For linear activation on output layer, derivative is 1
+        self.delta2 = np.clip(self.error, -1, 1)  # Output layer error (linear activation)
         self.delta1 = np.clip(np.dot(self.delta2, self.W2.T) * sigmoid_derivative(self.a1), -1, 1)  # Hidden layer error
 
         # Compute gradients
@@ -417,7 +476,7 @@ class StockNet:
         self.W2 += learning_rate * m_W2_corrected / (np.sqrt(v_W2_corrected) + self.epsilon)
         self.b2 += learning_rate * m_b2_corrected / (np.sqrt(v_b2_corrected) + self.epsilon)
 
-    def train(self, X, y, X_val=None, y_val=None, epochs=1000, learning_rate=0.001, batch_size=32, save_history=True, history_interval=10):
+    def train(self, X, y, X_val=None, y_val=None, epochs=1000, learning_rate=0.001, batch_size=32, save_history=True, history_interval=50, patience=20):
         """
         Train the neural network using mini-batch gradient descent with early stopping.
         
@@ -431,13 +490,13 @@ class StockNet:
             batch_size (int): Size of mini-batches for training
             save_history (bool): Whether to save weight history for visualization
             history_interval (int): How often to save weight history (every N epochs)
+            patience (int): Number of epochs to wait for improvement before early stopping
             
         Returns:
             tuple: (train_losses, val_losses) containing loss history
         """
         n_samples = X.shape[0]
         best_mse = float('inf')
-        patience = 20  # Number of epochs to wait for improvement
         patience_counter = 0
         
         # Initialize loss tracking
@@ -448,6 +507,11 @@ class StockNet:
         if save_history:
             weights_history_dir = os.path.join(os.getcwd(), "weights_history")
             os.makedirs(weights_history_dir, exist_ok=True)
+        
+        # Memory management: use smaller batch size if data is large
+        if n_samples > 10000:
+            batch_size = min(batch_size, 16)  # Reduce batch size for large datasets
+            print(f"Large dataset detected ({n_samples} samples), using batch size: {batch_size}")
         
         for epoch in range(epochs):
             # Shuffle data for each epoch
@@ -487,10 +551,13 @@ class StockNet:
                 val_losses.append(avg_mse)  # Use training loss as validation loss
                 current_mse = avg_mse
             
-            # Save weight history at regular intervals
+            # Save weight history less frequently to reduce memory usage
             if save_history and (epoch % history_interval == 0 or epoch == epochs - 1):
-                history_file = os.path.join(weights_history_dir, f"weights_history_{epoch:04d}.npz")
-                np.savez(history_file, W1=self.W1, W2=self.W2)
+                try:
+                    history_file = os.path.join(weights_history_dir, f"weights_history_{epoch:04d}.npz")
+                    np.savez(history_file, W1=self.W1, W2=self.W2)
+                except Exception as e:
+                    print(f"Warning: Could not save weight history at epoch {epoch}: {e}")
             
             # Early stopping check
             if current_mse < best_mse:
@@ -518,7 +585,12 @@ class StockNet:
                 if X_val is not None and y_val is not None:
                     print(f"Epoch {epoch}, Train MSE: {avg_mse:.6f}, Val MSE: {val_mse:.6f}")
                 else:
-                    print(f"Epoch {epoch}, MSE: {avg_mse:.6f}")        
+                    print(f"Epoch {epoch}, MSE: {avg_mse:.6f}")
+        
+        # Force garbage collection after training
+        import gc
+        gc.collect()
+        
         return train_losses, val_losses
 
 def load_data_from_directory(directory_path):
@@ -740,7 +812,7 @@ if __name__ == "__main__":
     # Train the model with weight history saving
     print("\nTraining model...")
     train_losses, val_losses = model.train(X_train, Y_train, X_val=X_test, y_val=Y_test, epochs=1000, learning_rate=args.learning_rate, 
-                batch_size=args.batch_size, save_history=True, history_interval=10)
+                batch_size=args.batch_size, save_history=True, history_interval=50)
     
     # Move weights history to model directory
     if os.path.exists("weights_history"):
