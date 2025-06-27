@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.coverage
+coverage.xml
+*.ipynb_checkpoints/
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Environment
+.env
+*.env
+
+# Logs
+*.log
+*.feather
+*.cvs
+*.txt
+*.duckdb
+*.dat
+*.keras
+*.preprocessed.json
+*.parquet
+*.pkl
+*.h5
+*.zip
