@@ -1,0 +1,9 @@
+{
+    "x_features": [
+        "open",
+        "high",
+        "low",
+        "vol"
+    ],
+    "y_feature": "close"
+}

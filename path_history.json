@@ -1,0 +1,8 @@
+{
+  "data_files": [
+    "/Users/porupine/redline/data/coin_us_data.csv"
+  ],
+  "output_dirs": [
+    "/Users/porupine/Desktop/revised_neural_net"
+  ]
+}

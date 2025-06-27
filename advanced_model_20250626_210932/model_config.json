@@ -1,0 +1,18 @@
+{
+  "layer_sizes": [
+    10,
+    128,
+    64,
+    32,
+    1
+  ],
+  "input_size": 10,
+  "hidden_sizes": [
+    128,
+    64,
+    32
+  ],
+  "learning_rate": 0.0005,
+  "dropout_rate": 0.3,
+  "l2_reg": 0.001
+}

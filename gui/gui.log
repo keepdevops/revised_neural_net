@@ -1,0 +1,4 @@
+2025-06-26 22:57:30,807 - gui.core.model_manager - INFO - Found 36 models
+2025-06-26 22:57:30,815 - __main__ - INFO - Initial state loaded successfully
+2025-06-26 22:57:30,815 - __main__ - INFO - GUI initialized successfully
+2025-06-26 22:59:11,092 - __main__ - INFO - Application closing

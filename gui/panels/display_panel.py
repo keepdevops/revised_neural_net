@@ -36,8 +36,25 @@ class DisplayPanel:
         train_results_frame = ttk.Frame(self.app.display_notebook)
         self.app.display_notebook.add(train_results_frame, text="Training Results")
         train_results_frame.grid_columnconfigure(0, weight=1)
-        train_results_frame.grid_rowconfigure(0, weight=1)
-        train_results_frame.grid_rowconfigure(1, weight=1)
+        train_results_frame.grid_rowconfigure(0, weight=0)  # Controls
+        train_results_frame.grid_rowconfigure(1, weight=1)  # Plot canvas
+        train_results_frame.grid_rowconfigure(2, weight=0)  # Log frame
+        train_results_frame.grid_rowconfigure(3, weight=0)  # Toolbar
+        
+        # Add controls frame for training results
+        train_controls_frame = ttk.Frame(train_results_frame)
+        train_controls_frame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
+        train_controls_frame.grid_columnconfigure(0, weight=1)
+        
+        # Add refresh button for training results
+        self.app.refresh_train_btn = ttk.Button(train_controls_frame, text="🔄 Refresh Training Results", 
+                                          command=self.app.refresh_training_results)
+        self.app.refresh_train_btn.grid(row=0, column=0, padx=5, pady=5)
+        
+        # Add status label for training results
+        self.app.train_status_label = ttk.Label(train_controls_frame, text="Training results will appear here", 
+                                          foreground=TEXT_COLOR, background=FRAME_COLOR)
+        self.app.train_status_label.grid(row=1, column=0, padx=5, pady=5)
         
         # Create matplotlib figure for training results
         self.app.results_fig = plt.Figure(figsize=(8, 4))
@@ -45,14 +62,11 @@ class DisplayPanel:
         
         # Create canvas and embed in the tab using grid
         self.app.results_canvas = FigureCanvasTkAgg(self.app.results_fig, train_results_frame)
-        self.app.results_canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
-        
-        # Add toolbar using grid
-        toolbar = GridMatplotlibToolbar(self.app.results_canvas, train_results_frame)
+        self.app.results_canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
         
         # Add live training log text widget
         log_frame = ttk.LabelFrame(train_results_frame, text="Live Training Log", padding="5")
-        log_frame.grid(row=1, column=0, sticky="nsew", pady=(5, 0))
+        log_frame.grid(row=2, column=0, sticky="nsew", pady=(5, 0))
         log_frame.grid_columnconfigure(0, weight=1)
         log_frame.grid_rowconfigure(0, weight=1)
         
@@ -65,6 +79,10 @@ class DisplayPanel:
         log_scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.app.training_log_text.yview)
         log_scrollbar.grid(row=0, column=1, sticky="ns")
         self.app.training_log_text.configure(yscrollcommand=log_scrollbar.set)
+        
+        # Add toolbar using grid
+        toolbar = GridMatplotlibToolbar(self.app.results_canvas, train_results_frame)
+        toolbar.grid(row=3, column=0, sticky="ew")
         
         # Initialize with a placeholder plot
         self.app.results_ax.text(0.5, 0.5, 'Training results will appear here', 
@@ -86,7 +104,8 @@ class DisplayPanel:
         pred_results_frame.grid_columnconfigure(0, weight=1)
         pred_results_frame.grid_rowconfigure(0, weight=0)  # Controls
         pred_results_frame.grid_rowconfigure(1, weight=1)  # Plot canvas
-        pred_results_frame.grid_rowconfigure(2, weight=0)  # Toolbar
+        pred_results_frame.grid_rowconfigure(2, weight=0)  # Data table
+        pred_results_frame.grid_rowconfigure(3, weight=0)  # Toolbar
         
         # Add controls frame for prediction results
         pred_controls_frame = ttk.Frame(pred_results_frame)
@@ -104,14 +123,34 @@ class DisplayPanel:
         self.app.pred_status_label.grid(row=1, column=0, padx=5, pady=5)
         
         # Create figure for prediction plot
-        self.app.pred_fig = plt.Figure(figsize=(5, 4), dpi=100)
+        self.app.pred_fig = plt.Figure(figsize=(8, 4), dpi=100)
         self.app.pred_ax = self.app.pred_fig.add_subplot(111)
         self.app.pred_canvas = FigureCanvasTkAgg(self.app.pred_fig, master=pred_results_frame)
         self.app.pred_canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
         
+        # Add data table frame
+        data_table_frame = ttk.LabelFrame(pred_results_frame, text="Prediction Data", padding="5")
+        data_table_frame.grid(row=2, column=0, sticky="nsew", pady=(5, 0))
+        data_table_frame.grid_columnconfigure(0, weight=1)
+        data_table_frame.grid_rowconfigure(0, weight=1)
+        
+        # Create treeview for data display
+        self.app.pred_tree = ttk.Treeview(data_table_frame, height=6, show="headings")
+        self.app.pred_tree.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        
+        # Add scrollbar for treeview
+        pred_tree_scrollbar = ttk.Scrollbar(data_table_frame, orient="vertical", command=self.app.pred_tree.yview)
+        pred_tree_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.app.pred_tree.configure(yscrollcommand=pred_tree_scrollbar.set)
+        
+        # Add horizontal scrollbar for treeview
+        pred_tree_h_scrollbar = ttk.Scrollbar(data_table_frame, orient="horizontal", command=self.app.pred_tree.xview)
+        pred_tree_h_scrollbar.grid(row=1, column=0, sticky="ew")
+        self.app.pred_tree.configure(xscrollcommand=pred_tree_h_scrollbar.set)
+        
         # Add toolbar for prediction results
         pred_toolbar = GridMatplotlibToolbar(self.app.pred_canvas, pred_results_frame)
-        pred_toolbar.grid(row=2, column=0, sticky="ew")
+        pred_toolbar.grid(row=3, column=0, sticky="ew")
         
         # Initialize with a placeholder plot
         self.app.pred_ax.text(0.5, 0.5, 'Select a model and data file to view predictions', 

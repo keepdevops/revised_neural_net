@@ -69,15 +69,15 @@ def test_gradient_descent_script():
     print(f"📁 Using model directory: {model_dir}")
     
     # Check if gradient_descent_3d.py exists
-    if not os.path.exists("gradient_descent_3d.py"):
+    if not os.path.exists("visualization/gradient_descent_3d.py"):
         print("❌ gradient_descent_3d.py not found")
         return False
-    
-    print("✅ gradient_descent_3d.py found")
+    else:
+        print("✅ gradient_descent_3d.py found")
     
     # Run the script
     import subprocess
-    cmd = [sys.executable, "gradient_descent_3d.py", "--model_dir", model_dir, "--save_mpeg"]
+    cmd = [sys.executable, "visualization/gradient_descent_3d.py", "--model_dir", model_dir, "--save_mpeg"]
     print(f"🚀 Running: {' '.join(cmd)}")
     
     try:

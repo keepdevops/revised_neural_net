@@ -15,7 +15,7 @@ def test_mpeg_generation():
     print("🧪 Testing MPEG generation functionality...")
     
     # Check if gradient_descent_3d.py exists
-    if not os.path.exists("gradient_descent_3d.py"):
+    if not os.path.exists("visualization/gradient_descent_3d.py"):
         print("❌ gradient_descent_3d.py not found")
         return False
     
@@ -47,7 +47,7 @@ def test_mpeg_generation():
         print("📊 Created mock training data")
         
         # Test MPEG generation
-        cmd = [sys.executable, "gradient_descent_3d.py", "--model_dir", temp_dir, "--save_mpeg"]
+        cmd = [sys.executable, "visualization/gradient_descent_3d.py", "--model_dir", temp_dir, "--save_mpeg"]
         print(f"🎬 Running command: {' '.join(cmd)}")
         
         try:

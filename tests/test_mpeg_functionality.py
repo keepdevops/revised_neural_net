@@ -50,12 +50,12 @@ def test_3d_visualization_script():
     print("\nTesting 3D visualization script...")
     
     # Check if gradient_descent_3d.py exists
-    script_path = os.path.join(project_root, 'gradient_descent_3d.py')
+    script_path = os.path.join(project_root, 'visualization/gradient_descent_3d.py')
     if not os.path.exists(script_path):
         print("❌ gradient_descent_3d.py not found")
         return False
-    
-    print("✅ gradient_descent_3d.py found")
+    else:
+        print("✅ gradient_descent_3d.py found")
     
     # Check if it has MPEG saving capability
     with open(script_path, 'r') as f:

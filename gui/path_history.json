@@ -1,0 +1,14 @@
+{
+  "data_files": [
+    "training_data_sample.csv",
+    "test_sample_data.csv",
+    "/Users/porupine/redline/data/NYSE_M_Z_2020_2025-0505data.csv",
+    "/Users/porupine/redline/data/World_Indexes_2020_2025_data.csv",
+    "/Users/porupine/redline/data/nvda_us_data.csv",
+    "/Users/porupine/redline/data/soun_us_data.csv"
+  ],
+  "output_dirs": [
+    "/Users/porupine/Desktop/revised_neural_net",
+    "/Users/porupine/neural_net/neural_net_refactored"
+  ]
+}

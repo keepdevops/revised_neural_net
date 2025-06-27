@@ -1,0 +1,21 @@
+{
+  "x_features": [
+    "open",
+    "high",
+    "low",
+    "vol",
+    "ma_5",
+    "ma_10",
+    "rsi",
+    "price_change",
+    "volatility_10",
+    "macd"
+  ],
+  "y_feature": "close",
+  "input_size": 10,
+  "hidden_sizes": [
+    128,
+    64,
+    32
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "epochs": 100,
+  "learning_rate": 0.001,
+  "batch_size": 32,
+  "hidden_size": 4,
+  "validation_split": 0.2,
+  "early_stopping_patience": 10,
+  "random_seed": 42,
+  "save_history": true,
+  "memory_optimization": true,
+  "data_file": "/Users/porupine/redline/data/bb_us_data.csv",
+  "output_dir": "/Users/porupine/Desktop/revised_neural_net"
+}

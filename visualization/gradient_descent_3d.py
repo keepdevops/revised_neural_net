@@ -35,7 +35,7 @@ def load_config(config_file=None):
             "fps": 30,
             "save_png": True,
             "save_mpeg": True,
-            "output_resolution": [1200, 800],
+            "output_resolution": [1000, 800],
             "w1_index": 0,
             "w2_index": 0
         }

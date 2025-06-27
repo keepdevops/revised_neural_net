@@ -1,0 +1,9 @@
+{
+  "default_epochs": 100,
+  "default_learning_rate": 0.001,
+  "default_batch_size": 32,
+  "default_hidden_size": 64,
+  "max_history_size": 10,
+  "auto_save_interval": 5,
+  "enable_logging": true
+}

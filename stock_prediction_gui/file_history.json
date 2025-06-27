@@ -1,0 +1,17 @@
+{
+  "data_files": [
+    "/Users/porupine/redline/data/gamestop_us.csv",
+    "/Users/porupine/redline/data/shop_us_data.csv",
+    "/Users/porupine/redline/data/amc_us_data.csv",
+    "/Users/porupine/redline/data/coin_us_data.csv",
+    "/Users/porupine/redline/data/pltr_us_data.csv"
+  ],
+  "output_dirs": [],
+  "recent_files": [
+    "/Users/porupine/redline/data/gamestop_us.csv",
+    "/Users/porupine/redline/data/shop_us_data.csv",
+    "/Users/porupine/redline/data/amc_us_data.csv",
+    "/Users/porupine/redline/data/coin_us_data.csv",
+    "/Users/porupine/redline/data/pltr_us_data.csv"
+  ]
+}

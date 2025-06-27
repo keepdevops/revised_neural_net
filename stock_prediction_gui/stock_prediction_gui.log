@@ -1,0 +1,202 @@
+2025-06-26 23:26:22,560 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:29:21,605 - stock_prediction_gui.core.model_manager - INFO - Created model directory: ./model_20250626_232921
+2025-06-26 23:29:55,138 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-26 23:33:39,452 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:41:12,549 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-26 23:41:24,909 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:41:53,887 - stock_prediction_gui.core.app - ERROR - Error loading data file: 'DataManager' object has no attribute 'get_data_info'
+2025-06-26 23:42:56,081 - stock_prediction_gui.core.app - ERROR - Error loading data file: 'DataManager' object has no attribute 'get_data_info'
+2025-06-26 23:44:54,034 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-26 23:45:02,365 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:45:23,624 - stock_prediction_gui.core.app - ERROR - Error loading data file: 'DataManager' object has no attribute 'get_data_info'
+2025-06-26 23:48:27,322 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-26 23:48:40,101 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:49:02,877 - stock_prediction_gui.core.app - ERROR - Error loading data file: 'DataManager' object has no attribute 'get_data_info'
+2025-06-26 23:52:39,653 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-26 23:52:45,796 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-26 23:53:15,298 - stock_prediction_gui.ui.widgets.data_panel - ERROR - Error updating data info: 'int' object is not iterable
+2025-06-27 00:09:18,072 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 00:44:07,402 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 00:44:21,633 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:14:10,202 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:14:10,202 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:14:11,002 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:14:11,447 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:14:11,447 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:14:19,363 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:14:19,372 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:17:08,857 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:20:21,826 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:20:21,826 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:20:21,914 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:20:22,157 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:20:22,157 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:20:25,449 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:20:25,458 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:21:22,517 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:21:22,517 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:21:22,548 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:21:22,637 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:21:22,638 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:21:24,724 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:21:24,734 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:29:13,470 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:29:36,487 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:29:36,487 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:29:36,522 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:29:36,648 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:29:36,648 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:29:37,952 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:29:37,961 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:34:31,657 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:34:39,445 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:34:39,445 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:34:39,482 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:34:39,612 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:34:39,612 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:34:40,940 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:34:40,950 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:36:26,902 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:36:26,902 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:36:26,939 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:36:27,042 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:36:27,042 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:36:29,386 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:36:29,399 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 01:36:29,399 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:37:12,383 - stock_prediction_gui.core.data_manager - WARNING - Could not read Feather with metadata: 'DataFrame' object has no attribute 'to_pandas'
+2025-06-27 01:37:13,060 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:37:13,061 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/NYSE_etfs_A_R_2020_2025_data.feather
+2025-06-27 01:37:19,020 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:37:19,020 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/NYSE_etfs_A_R_2020_2025_data.feather
+2025-06-27 01:38:08,989 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 01:44:09,211 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:44:22,302 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:46:19,229 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:46:19,229 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:46:19,264 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:46:19,387 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:46:19,387 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:46:20,670 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:46:20,681 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 01:46:20,681 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:47:23,580 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:47:23,580 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/shop_us_data.csv
+2025-06-27 01:47:27,176 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:47:27,176 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/shop_us_data.csv
+2025-06-27 01:47:48,108 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:47:48,108 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/shop_us_data.csv
+2025-06-27 01:48:10,336 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 01:49:15,620 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 01:52:18,514 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 01:52:18,514 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 01:52:18,549 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 01:52:18,671 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 01:52:18,671 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 01:52:19,955 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 01:52:19,966 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 01:52:19,966 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 01:52:53,354 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:52:53,354 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/World_Indexes_2020_2025_data.csv
+2025-06-27 01:52:56,164 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 01:52:56,165 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/World_Indexes_2020_2025_data.csv
+2025-06-27 01:53:11,705 - stock_prediction_gui.ui.widgets.data_panel - INFO - Default OHLC features set
+2025-06-27 01:53:15,378 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 02:08:07,654 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 02:08:25,442 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 02:08:25,442 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 02:08:25,477 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 02:08:25,600 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 02:08:25,600 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 02:08:26,878 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 02:08:26,889 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 02:08:26,889 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 02:08:43,563 - stock_prediction_gui.core.data_manager - WARNING - Could not read Feather with metadata: 'DataFrame' object has no attribute 'to_pandas'
+2025-06-27 02:08:43,678 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 02:08:43,678 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/Nasdaq_T_Z_data.feather
+2025-06-27 02:08:47,610 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 02:08:47,610 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/Nasdaq_T_Z_data.feather
+2025-06-27 02:09:01,582 - stock_prediction_gui.core.app - INFO - Selected features updated: ['open', 'high', 'low', 'vol']
+2025-06-27 02:09:01,583 - stock_prediction_gui.core.app - INFO - Selected target updated: close
+2025-06-27 02:09:01,584 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 02:10:01,175 - stock_prediction_gui.core.training_integration - INFO - Starting training in directory: /Users/porupine/Desktop/revised_neural_net/model_20250627_021001
+2025-06-27 02:10:01,177 - stock_prediction_gui.core.training_integration - ERROR - Training failed: 'utf-8' codec can't decode byte 0xff in position 8: invalid start byte
+2025-06-27 02:24:34,094 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 02:24:44,657 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 02:24:44,657 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 02:24:44,692 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 02:24:44,816 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 02:24:44,816 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 02:24:46,098 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 02:24:46,108 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 02:24:46,108 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 02:25:18,078 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 02:25:18,079 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/Nasdaq_A_I_data.duckdb
+2025-06-27 02:25:52,823 - stock_prediction_gui.core.app - INFO - Selected features updated: ['open', 'high', 'low', 'vol']
+2025-06-27 02:25:52,823 - stock_prediction_gui.core.app - INFO - Selected target updated: close
+2025-06-27 02:25:52,824 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 02:26:13,536 - stock_prediction_gui.core.training_integration - INFO - Starting training in directory: /Users/porupine/Desktop/revised_neural_net/model_20250627_022613
+2025-06-27 02:30:47,677 - stock_prediction_gui.core.training_integration - INFO - Training completed successfully. Model saved to: /Users/porupine/Desktop/revised_neural_net/model_20250627_022613
+2025-06-27 02:31:05,326 - stock_prediction_gui.utils.validation - ERROR - Missing required parameter: model_path
+2025-06-27 02:31:08,034 - stock_prediction_gui.utils.validation - ERROR - Missing required parameter: model_path
+2025-06-27 02:31:14,343 - stock_prediction_gui.utils.validation - ERROR - Missing required parameter: model_path
+2025-06-27 02:31:42,968 - stock_prediction_gui.utils.validation - ERROR - Missing required parameter: model_path
+2025-06-27 02:32:21,122 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 02:41:11,371 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 02:41:11,371 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 02:41:11,406 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 02:41:11,505 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 02:41:11,505 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 02:41:13,724 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 02:41:13,737 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 02:41:13,737 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 02:45:48,166 - stock_prediction_gui.ui.windows.floating_3d_window - WARNING - No training data found
+2025-06-27 02:45:48,167 - stock_prediction_gui.ui.windows.floating_3d_window - INFO - Found 0 weight files
+2025-06-27 02:45:48,167 - stock_prediction_gui.ui.windows.floating_3d_window - WARNING - No feature info found
+2025-06-27 02:45:48,202 - stock_prediction_gui.ui.windows.floating_3d_window - ERROR - Error creating plot: cannot use geometry manager pack inside .!frame.!notebook.!toplevel.!frame.!frame which already has slaves managed by grid
+2025-06-27 02:45:48,206 - stock_prediction_gui.ui.widgets.control_plots_panel - ERROR - Error creating 3D plot: Axes3D.text() missing 1 required positional argument: 's'
+2025-06-27 02:46:39,444 - stock_prediction_gui.ui.windows.floating_3d_window - WARNING - No training data found
+2025-06-27 02:46:39,444 - stock_prediction_gui.ui.windows.floating_3d_window - INFO - Found 0 weight files
+2025-06-27 02:46:39,444 - stock_prediction_gui.ui.windows.floating_3d_window - WARNING - No feature info found
+2025-06-27 02:46:39,459 - stock_prediction_gui.ui.windows.floating_3d_window - ERROR - Error creating plot: cannot use geometry manager pack inside .!frame.!notebook.!toplevel2.!frame.!frame which already has slaves managed by grid
+2025-06-27 02:46:39,463 - stock_prediction_gui.ui.widgets.control_plots_panel - ERROR - Error creating 3D plot: Axes3D.text() missing 1 required positional argument: 's'
+2025-06-27 02:51:30,984 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 02:51:30,984 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 02:51:31,025 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 02:51:31,139 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 02:51:31,140 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 02:51:33,353 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 02:51:33,365 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 02:51:33,365 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 02:56:49,530 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 02:56:53,809 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 03:00:40,591 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 03:00:40,591 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 03:00:40,626 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 03:00:40,748 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 03:00:40,749 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 03:00:42,027 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 03:00:42,038 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 03:00:42,038 - stock_prediction_gui.core.app - INFO - Application initialized successfully
+2025-06-27 03:01:12,481 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 03:01:12,481 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/NYSE_M_Z_data.duckdb
+2025-06-27 03:01:16,359 - stock_prediction_gui.ui.widgets.data_panel - INFO - Loaded 6 columns into selectors
+2025-06-27 03:01:16,359 - stock_prediction_gui.ui.widgets.data_panel - INFO - Data file loaded successfully: /Users/porupine/redline/data/NYSE_M_Z_data.duckdb
+2025-06-27 03:01:54,588 - stock_prediction_gui.core.app - INFO - Selected features updated: ['open', 'high', 'low', 'vol']
+2025-06-27 03:01:54,589 - stock_prediction_gui.core.app - INFO - Selected target updated: close
+2025-06-27 03:01:54,589 - stock_prediction_gui.ui.widgets.data_panel - INFO - Features locked: ['open', 'high', 'low', 'vol'] -> close
+2025-06-27 03:02:12,979 - stock_prediction_gui.core.training_integration - INFO - Starting training in directory: /Users/porupine/Desktop/revised_neural_net/model_20250627_030212
+2025-06-27 03:05:35,619 - stock_prediction_gui.core.training_integration - INFO - Training completed successfully. Model saved to: /Users/porupine/Desktop/revised_neural_net/model_20250627_030212
+2025-06-27 03:06:39,979 - stock_prediction_gui.core.prediction_integration - INFO - Starting prediction with model: ./model_20250626_232921
+2025-06-27 03:06:39,980 - stock_prediction_gui.core.prediction_integration - ERROR - Prediction failed: Feature info not found: ./feature_info.json
+2025-06-27 03:06:40,001 - stock_prediction_gui.core.app - ERROR - Error handling prediction completion: 
+2025-06-27 03:09:25,263 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 03:09:50,217 - stock_prediction_gui.core.app - INFO - Application cleanup completed
+2025-06-27 08:35:08,570 - stock_prediction_gui.core.data_manager - INFO - DuckDB support enabled
+2025-06-27 08:35:08,571 - stock_prediction_gui.core.data_manager - INFO - PyArrow support enabled (includes Feather)
+2025-06-27 08:35:08,607 - stock_prediction_gui.core.data_manager - INFO - Polars support enabled
+2025-06-27 08:35:08,734 - stock_prediction_gui.core.data_manager - INFO - HDF5 support enabled
+2025-06-27 08:35:08,734 - stock_prediction_gui.core.data_manager - INFO - Joblib support enabled
+2025-06-27 08:35:10,177 - stock_prediction_gui.core.data_manager - INFO - TensorFlow/Keras support enabled
+2025-06-27 08:35:10,231 - stock_prediction_gui.core.app - ERROR - Error loading recent files: 'DataPanel' object has no attribute 'update_recent_files'
+2025-06-27 08:35:10,231 - stock_prediction_gui.core.app - INFO - Application initialized successfully
