@@ -6,6 +6,10 @@ __pycache__/
 .Python
 venv/
 env/
+# Large datasets
+*.csv
+data/
+model_*/training_data.csv
 *.egg-info/
 .pytest_cache/
 .coverage
@@ -35,3 +39,12 @@ Thumbs.db
 *.pkl
 *.h5
 *.zip
+*.pth
+!model_*/config.json
+*.mpeg
+*.mpg
+*.mp4
+*.m4v
+*.png
+*.gif
+*.Prediction_*/
