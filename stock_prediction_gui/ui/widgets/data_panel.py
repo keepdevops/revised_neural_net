@@ -597,9 +597,46 @@ class DataPanel:
             self.logger.error(f"Error adding to recent directories: {e}")
     
     def load_recent_files(self):
-        """Load recent files into listbox."""
+        """Load recent files from the app's file history."""
         try:
-            # This would load from the app's file history
-            pass
+            if hasattr(self.app, 'file_utils'):
+                recent_files = self.app.file_utils.get_recent_files()
+                self.recent_files_listbox.delete(0, tk.END)
+                
+                for file_path in recent_files:
+                    if os.path.exists(file_path):
+                        # Show just the filename, not the full path
+                        filename = os.path.basename(file_path)
+                        self.recent_files_listbox.insert(tk.END, filename)
+                        # Store the full path as item data
+                        self.recent_files_listbox.itemconfig(tk.END, {'bg': 'lightblue'})
+                
+                # Also load recent directories
+                recent_dirs = self.app.file_utils.get_recent_output_dirs()
+                self.output_dir_combo['values'] = recent_dirs
+            else:
+                self.logger.warning("App does not have file_utils attribute")
+                
         except Exception as e:
             self.logger.error(f"Error loading recent files: {e}")
+    
+    def update_recent_files(self, recent_files=None):
+        """Update the recent files display."""
+        try:
+            if recent_files is not None:
+                # Update with provided recent files
+                self.recent_files_listbox.delete(0, tk.END)
+                
+                for file_path in recent_files:
+                    if os.path.exists(file_path):
+                        # Show just the filename, not the full path
+                        filename = os.path.basename(file_path)
+                        self.recent_files_listbox.insert(tk.END, filename)
+                        # Store the full path as item data
+                        self.recent_files_listbox.itemconfig(tk.END, {'bg': 'lightblue'})
+            else:
+                # Load from app's file history
+                self.load_recent_files()
+                
+        except Exception as e:
+            self.logger.error(f"Error updating recent files: {e}")

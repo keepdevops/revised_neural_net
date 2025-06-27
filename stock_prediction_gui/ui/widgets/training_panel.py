@@ -315,15 +315,17 @@ class TrainingPanel:
                 time.sleep(0.5)
                 
                 # Check if we have new data to plot
-                if hasattr(self.app, 'training_manager') and self.app.training_manager:
-                    # Get current training state
-                    current_epoch = getattr(self.app.training_manager, 'current_epoch', 0)
-                    current_loss = getattr(self.app.training_manager, 'current_loss', None)
-                    current_val_loss = getattr(self.app.training_manager, 'current_val_loss', None)
-                    
-                    # Update plot if we have new data
-                    if current_loss is not None and current_epoch > 0:
-                        self.add_data_point(current_epoch, current_loss, current_val_loss)
+                if hasattr(self.app, 'training_integration') and self.app.training_integration:
+                    training_manager = getattr(self.app.training_integration, 'training_manager', None)
+                    if training_manager:
+                        # Get current training state
+                        current_epoch = getattr(training_manager, 'current_epoch', 0)
+                        current_loss = getattr(training_manager, 'current_loss', None)
+                        current_val_loss = getattr(training_manager, 'current_val_loss', None)
+                        
+                        # Update plot if we have new data
+                        if current_loss is not None and current_epoch > 0:
+                            self.add_data_point(current_epoch, current_loss, current_val_loss)
                 
             except Exception as e:
                 self.logger.error(f"Error in live plotting: {e}")

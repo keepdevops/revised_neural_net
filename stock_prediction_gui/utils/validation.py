@@ -92,16 +92,25 @@ class ValidationUtils:
         if not os.path.exists(model_dir):
             return False, "Model directory does not exist"
         
-        # Check for required files
-        required_files = ['feature_info.json']
-        missing_files = []
+        # Check for model files (weights) - these are required
+        model_files = ['stock_model.npz', 'model.npz', 'final_model.npz', 'best_model.npz']
+        has_model_file = any(os.path.exists(os.path.join(model_dir, f)) for f in model_files)
         
-        for file_name in required_files:
-            file_path = os.path.join(model_dir, file_name)
-            if not os.path.exists(file_path):
-                missing_files.append(file_name)
+        # If no main model file found, check weights_history directory
+        if not has_model_file:
+            weights_history_dir = os.path.join(model_dir, 'weights_history')
+            if os.path.exists(weights_history_dir):
+                weight_files = [f for f in os.listdir(weights_history_dir) if f.endswith('.npz')]
+                if weight_files:
+                    has_model_file = True
         
-        if missing_files:
-            return False, f"Missing required files: {missing_files}"
+        if not has_model_file:
+            return False, "No model weights file found (stock_model.npz, model.npz, final_model.npz, best_model.npz, or weight files in weights_history/)"
+        
+        # Check for feature info (optional but preferred)
+        feature_info_path = os.path.join(model_dir, 'feature_info.json')
+        if not os.path.exists(feature_info_path):
+            # Warning but not error - we can auto-detect features
+            self.logger.warning(f"No feature_info.json found in {model_dir}. Features will be auto-detected from data.")
         
         return True, "" 

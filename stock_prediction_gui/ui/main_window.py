@@ -252,7 +252,16 @@ Built with Python and Tkinter.
     
     def update_recent_files(self, recent_files):
         """Update recent files list."""
-        self.data_panel.update_recent_files(recent_files)
+        try:
+            if hasattr(self, 'data_panel') and self.data_panel is not None:
+                if hasattr(self.data_panel, 'update_recent_files'):
+                    self.data_panel.update_recent_files(recent_files)
+                else:
+                    self.logger.warning("DataPanel missing update_recent_files method")
+            else:
+                self.logger.warning("DataPanel not yet initialized")
+        except Exception as e:
+            self.logger.error(f"Error updating recent files: {e}")
     
     def update_training_progress(self, epoch, loss, val_loss, progress):
         """Update training progress."""
