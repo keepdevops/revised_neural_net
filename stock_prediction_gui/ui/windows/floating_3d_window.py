@@ -136,9 +136,26 @@ class Floating3DWindow:
             self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
             self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
             
-            # Add navigation toolbar using grid
-            self.toolbar = NavigationToolbar2Tk(self.canvas, self.plot_frame)
-            self.toolbar.grid(row=1, column=0, sticky="ew")
+            # Create toolbar frame first
+            toolbar_frame = tk.Frame(self.plot_frame)
+            toolbar_frame.grid(row=1, column=0, sticky="ew", pady=(5, 0))
+            
+            # Create navigation toolbar in the dedicated frame
+            try:
+                self.toolbar = NavigationToolbar2Tk(self.canvas, toolbar_frame)
+                # The toolbar will automatically pack itself in the toolbar_frame
+                # which is fine since toolbar_frame uses grid in the parent
+            except Exception as toolbar_error:
+                self.logger.warning(f"Toolbar creation failed, using fallback: {toolbar_error}")
+                # Create a simple fallback toolbar
+                fallback_frame = tk.Frame(toolbar_frame)
+                fallback_frame.pack(fill="x")
+                
+                tk.Button(fallback_frame, text="Reset View", 
+                         command=lambda: self.ax.view_init(elev=20, azim=45)).pack(side="left", padx=2)
+                tk.Button(fallback_frame, text="Home", 
+                         command=lambda: self.canvas.draw()).pack(side="left", padx=2)
+                self.toolbar = fallback_frame
             
             # Generate plot data
             self.generate_plot_data()
@@ -194,11 +211,15 @@ class Floating3DWindow:
             y = np.random.randn(n_points)
             z = np.random.randn(n_points)
         
+        # Get plot parameters with defaults
+        point_size = self.plot_params.get('point_size', 50)
+        color_scheme = self.plot_params.get('color_scheme', 'viridis')
+        
         # Create scatter plot
         scatter = self.ax.scatter(x, y, z, 
                                 c=z,  # Color by z-value
-                                cmap=self.plot_params['color_scheme'],
-                                s=self.plot_params['point_size'],
+                                cmap=color_scheme,
+                                s=point_size,
                                 alpha=0.7)
         
         # Add colorbar
@@ -502,8 +523,9 @@ class Floating3DWindow:
         ttk.Button(view_frame, text="Side View", command=self.side_view).pack(side="left", padx=(0, 5))
         ttk.Button(view_frame, text="Isometric", command=self.isometric_view).pack(side="left")
         
-        # Animation controls
-        if self.plot_params['animation_enabled']:
+        # Animation controls (only show if animation is enabled)
+        animation_enabled = self.plot_params.get('animation_enabled', False)
+        if animation_enabled:
             anim_frame = ttk.LabelFrame(self.controls_frame, text="Animation", padding="5")
             anim_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
             
@@ -515,6 +537,8 @@ class Floating3DWindow:
         save_frame.pack(side="right")
         
         ttk.Button(save_frame, text="Save Plot", command=self.save_plot).pack(side="left", padx=(0, 5))
+        ttk.Button(save_frame, text="Save Animation (MP4)", command=self.save_animation_mp4).pack(side="left", padx=(0, 5))
+        ttk.Button(save_frame, text="Save Animation (GIF)", command=self.save_animation_gif).pack(side="left", padx=(0, 5))
         ttk.Button(save_frame, text="Close", command=self.close).pack(side="left")
     
     def reset_view(self):
@@ -581,6 +605,86 @@ class Floating3DWindow:
         except Exception as e:
             self.logger.error(f"Error saving plot: {e}")
             messagebox.showerror("Error", f"Failed to save plot: {e}")
+    
+    def save_animation_mp4(self):
+        """Save a 360-frame rotation animation as MP4 (MPEG4) using ffmpeg writer."""
+        try:
+            from tkinter import filedialog
+            import matplotlib.animation as animation
+            
+            # Ask user for save location
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            plot_type = self.plot_params['plot_type'].replace(" ", "_").lower()
+            default_filename = f"3d_plot_{plot_type}_{timestamp}.mp4"
+            plots_dir = os.path.join(self.model_path, "plots")
+            os.makedirs(plots_dir, exist_ok=True)
+            default_path = os.path.join(plots_dir, default_filename)
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".mp4",
+                initialfile=default_filename,
+                initialdir=plots_dir,
+                filetypes=[("MP4 files", "*.mp4"), ("All files", "*.*")]
+            )
+            if not file_path:
+                return
+            # Create animation
+            anim = animation.FuncAnimation(
+                self.fig, self.animate_frame,
+                frames=360,  # Full rotation
+                interval=50,  # 20 FPS
+                repeat=False
+            )
+            # Try to use ffmpeg writer
+            try:
+                Writer = animation.writers['ffmpeg']
+                writer = Writer(fps=20, metadata=dict(artist='3D Plot Animation'), bitrate=1800)
+                anim.save(file_path, writer=writer, dpi=100)
+                messagebox.showinfo("Success", f"Animation saved to:\n{file_path}")
+            except Exception as ffmpeg_error:
+                self.logger.error(f"Error saving MP4 animation: {ffmpeg_error}")
+                messagebox.showerror("Error", f"Failed to save MP4 animation.\nError: {ffmpeg_error}\n\nMake sure ffmpeg is installed and available in your PATH.")
+        except Exception as e:
+            self.logger.error(f"Error in save_animation_mp4: {e}")
+            messagebox.showerror("Error", f"Failed to save animation: {e}")
+    
+    def save_animation_gif(self):
+        """Save a 360-frame rotation animation as GIF using matplotlib's pillow writer."""
+        try:
+            from tkinter import filedialog
+            import matplotlib.animation as animation
+            
+            # Ask user for save location
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            plot_type = self.plot_params['plot_type'].replace(" ", "_").lower()
+            default_filename = f"3d_plot_{plot_type}_{timestamp}.gif"
+            plots_dir = os.path.join(self.model_path, "plots")
+            os.makedirs(plots_dir, exist_ok=True)
+            default_path = os.path.join(plots_dir, default_filename)
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".gif",
+                initialfile=default_filename,
+                initialdir=plots_dir,
+                filetypes=[("GIF files", "*.gif"), ("All files", "*.*")]
+            )
+            if not file_path:
+                return
+            # Create animation
+            anim = animation.FuncAnimation(
+                self.fig, self.animate_frame,
+                frames=360,  # Full rotation
+                interval=50,  # 20 FPS
+                repeat=False
+            )
+            # Try to use pillow writer
+            try:
+                anim.save(file_path, writer='pillow', fps=20)
+                messagebox.showinfo("Success", f"Animation saved to:\n{file_path}")
+            except Exception as pillow_error:
+                self.logger.error(f"Error saving GIF animation: {pillow_error}")
+                messagebox.showerror("Error", f"Failed to save GIF animation.\nError: {pillow_error}\n\nMake sure Pillow is installed and available in your PATH.")
+        except Exception as e:
+            self.logger.error(f"Error in save_animation_gif: {e}")
+            messagebox.showerror("Error", f"Failed to save animation: {e}")
     
     def close(self):
         """Close the floating window."""
