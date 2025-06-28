@@ -56,6 +56,9 @@ class PredictionPanel:
         
         ttk.Button(model_select_frame, text="Refresh", command=self.refresh_models).pack(side="right", padx=(5, 0))
         
+        # Add manual refresh button for latest model
+        ttk.Button(model_select_frame, text="Refresh & Select Latest", command=self.refresh_and_select_latest).pack(side="right", padx=(5, 0))
+        
         # Model info
         self.model_info_frame = ttk.Frame(model_frame)
         self.model_info_frame.pack(fill="x", pady=(10, 0))
@@ -156,6 +159,10 @@ class PredictionPanel:
     def refresh_models(self):
         """Refresh the model list."""
         self.app.refresh_models()
+    
+    def refresh_and_select_latest(self):
+        """Refresh the model list and auto-select the latest model."""
+        self.app.refresh_models_and_select_latest()
     
     def browse_prediction_data(self):
         """Browse for prediction data file."""
