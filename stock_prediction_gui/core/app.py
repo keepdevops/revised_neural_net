@@ -134,6 +134,23 @@ class StockPredictionApp:
         except Exception as e:
             self.logger.error(f"Error refreshing models: {e}")
     
+    def refresh_models_and_select_latest(self):
+        """Refresh the list of available models and auto-select the latest one."""
+        try:
+            models = self.model_manager.get_available_models()
+            self.main_window.update_model_list(models)
+            
+            # Auto-select the latest model if available
+            if models:
+                latest_model = models[0]  # The first model in the list is the most recent (reverse=True)
+                self.selected_model = latest_model
+                self.main_window.prediction_panel.model_var.set(os.path.basename(latest_model))
+                self.main_window.prediction_panel.update_model_info(latest_model)
+                self.logger.info(f"Auto-selected latest model: {os.path.basename(latest_model)}")
+            
+        except Exception as e:
+            self.logger.error(f"Error refreshing models and selecting latest: {e}")
+    
     def load_recent_files(self):
         """Load recent data files."""
         try:
@@ -262,7 +279,7 @@ class StockPredictionApp:
             else:
                 self.main_window.training_completed(model_dir)
                 self.main_window.update_status("Training completed successfully")
-                self.refresh_models()
+                self.refresh_models_and_select_latest()
         except Exception as e:
             self.logger.error(f"Error handling training completion: {e}")
     
