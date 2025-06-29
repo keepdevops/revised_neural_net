@@ -180,7 +180,7 @@ class DataManager:
         
         # JSON files
         elif file_ext == '.json':
-            return pd.read_json(file_path)
+            return self._load_json(file_path)
         
         # NumPy files
         elif file_ext == '.npy':
@@ -594,4 +594,241 @@ class DataManager:
     def clear_cache(self):
         """Clear the data cache."""
         self.data_cache.clear()
-        self.logger.info("Data cache cleared") 
+        self.logger.info("Data cache cleared")
+    
+    def save_as_json(self, data, file_path, orient='records', indent=2, date_format='iso'):
+        """Save data as JSON file with various formatting options."""
+        try:
+            # Convert to DataFrame if needed
+            if not isinstance(data, pd.DataFrame):
+                data = pd.DataFrame(data)
+            
+            # Save with specified options
+            data.to_json(
+                file_path, 
+                orient=orient, 
+                indent=indent, 
+                date_format=date_format,
+                default_handler=str  # Handle non-serializable objects
+            )
+            
+            self.logger.info(f"Data saved as JSON file: {file_path}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error saving JSON file: {e}")
+            return False
+    
+    def get_json_info(self, file_path):
+        """Get information about JSON file structure."""
+        try:
+            import json
+            
+            with open(file_path, 'r') as f:
+                content = f.read().strip()
+            
+            # Try to parse as single JSON object first
+            try:
+                data = json.loads(content)
+                return self._get_json_object_info(data, file_path)
+            except json.JSONDecodeError:
+                # If single JSON fails, try JSON Lines format
+                return self._get_json_lines_info(file_path)
+            
+        except Exception as e:
+            self.logger.error(f"Error getting JSON info: {e}")
+            return None
+    
+    def _get_json_object_info(self, data, file_path):
+        """Get info for single JSON object."""
+        info = {
+            'file_path': file_path,
+            'file_size': os.path.getsize(file_path),
+            'structure_type': type(data).__name__,
+            'is_array': isinstance(data, list),
+            'is_object': isinstance(data, dict),
+            'array_length': len(data) if isinstance(data, list) else None,
+            'object_keys': list(data.keys()) if isinstance(data, dict) else None,
+            'nested_levels': self._get_nesting_depth(data),
+            'estimated_rows': self._estimate_json_rows(data),
+            'estimated_columns': self._estimate_json_columns(data),
+            'format_type': 'single_json'
+        }
+        
+        return info
+    
+    def _get_json_lines_info(self, file_path):
+        """Get info for JSON Lines format."""
+        import json
+        
+        try:
+            line_count = 0
+            valid_lines = 0
+            sample_data = []
+            
+            with open(file_path, 'r') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if line:
+                        line_count += 1
+                        try:
+                            data = json.loads(line)
+                            valid_lines += 1
+                            if len(sample_data) < 3:  # Keep first 3 valid objects
+                                sample_data.append(data)
+                        except json.JSONDecodeError:
+                            continue
+            
+            # Analyze sample data
+            if sample_data:
+                if all(isinstance(item, dict) for item in sample_data):
+                    # All objects have the same structure
+                    sample_keys = list(sample_data[0].keys())
+                    estimated_columns = len(sample_keys)
+                else:
+                    sample_keys = None
+                    estimated_columns = 1
+            else:
+                sample_keys = None
+                estimated_columns = 0
+            
+            info = {
+                'file_path': file_path,
+                'file_size': os.path.getsize(file_path),
+                'structure_type': 'json_lines',
+                'is_array': True,
+                'is_object': False,
+                'array_length': valid_lines,
+                'object_keys': sample_keys,
+                'nested_levels': 1,  # JSON Lines are typically flat
+                'estimated_rows': valid_lines,
+                'estimated_columns': estimated_columns,
+                'format_type': 'json_lines',
+                'total_lines': line_count,
+                'valid_json_lines': valid_lines,
+                'invalid_lines': line_count - valid_lines
+            }
+            
+            return info
+            
+        except Exception as e:
+            self.logger.error(f"Error getting JSON Lines info: {e}")
+            return None
+    
+    def _get_nesting_depth(self, obj, current_depth=0):
+        """Calculate the maximum nesting depth of a JSON object."""
+        if isinstance(obj, dict):
+            if not obj:
+                return current_depth
+            return max(self._get_nesting_depth(v, current_depth + 1) for v in obj.values())
+        elif isinstance(obj, list):
+            if not obj:
+                return current_depth
+            return max(self._get_nesting_depth(item, current_depth + 1) for item in obj)
+        else:
+            return current_depth
+    
+    def _estimate_json_rows(self, data):
+        """Estimate the number of rows when converted to DataFrame."""
+        if isinstance(data, list):
+            return len(data)
+        elif isinstance(data, dict):
+            return 1
+        else:
+            return 1
+    
+    def _estimate_json_columns(self, data):
+        """Estimate the number of columns when converted to DataFrame."""
+        if isinstance(data, list) and len(data) > 0:
+            if isinstance(data[0], dict):
+                return len(data[0].keys())
+            else:
+                return 1
+        elif isinstance(data, dict):
+            return len(data.keys())
+        else:
+            return 1
+
+    def _load_json(self, file_path):
+        """Load data from JSON file with enhanced support for various structures."""
+        import json
+        
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read().strip()
+            
+            # Try to parse as single JSON object first
+            try:
+                data = json.loads(content)
+                return self._process_json_data(data)
+            except json.JSONDecodeError as e:
+                # If single JSON fails, try JSON Lines format
+                return self._load_json_lines(file_path)
+                
+        except Exception as e:
+            self.logger.error(f"Error loading JSON file: {e}")
+            # Try pandas read_json as fallback
+            try:
+                return pd.read_json(file_path)
+            except Exception as fallback_error:
+                self.logger.error(f"Fallback JSON loading also failed: {fallback_error}")
+                raise ValueError(f"Could not load JSON file: {e}")
+    
+    def _process_json_data(self, data):
+        """Process parsed JSON data into DataFrame."""
+        # Handle different JSON structures
+        if isinstance(data, list):
+            # Array of objects - most common format for tabular data
+            if len(data) > 0 and isinstance(data[0], dict):
+                return pd.DataFrame(data)
+            else:
+                # Array of primitive values
+                return pd.DataFrame(data, columns=['value'])
+        
+        elif isinstance(data, dict):
+            # Single object or nested structure
+            if any(isinstance(v, (list, dict)) for v in data.values()):
+                # Try to normalize nested structures
+                try:
+                    return pd.json_normalize(data)
+                except:
+                    # Fallback: convert to single row
+                    return pd.DataFrame([data])
+            else:
+                # Simple key-value pairs
+                return pd.DataFrame([data])
+        
+        else:
+            # Primitive value
+            return pd.DataFrame([data], columns=['value'])
+    
+    def _load_json_lines(self, file_path):
+        """Load JSON Lines format (multiple JSON objects, one per line)."""
+        import json
+        
+        try:
+            data_list = []
+            
+            with open(file_path, 'r') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if line:  # Skip empty lines
+                        try:
+                            data = json.loads(line)
+                            data_list.append(data)
+                        except json.JSONDecodeError as e:
+                            self.logger.warning(f"Invalid JSON on line {line_num}: {e}")
+                            continue
+            
+            if data_list:
+                # Convert list of objects to DataFrame
+                if all(isinstance(item, dict) for item in data_list):
+                    return pd.DataFrame(data_list)
+                else:
+                    return pd.DataFrame(data_list, columns=['value'])
+            else:
+                raise ValueError("No valid JSON objects found in file")
+                
+        except Exception as e:
+            self.logger.error(f"Error loading JSON Lines: {e}")
+            raise 
