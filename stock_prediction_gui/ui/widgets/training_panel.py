@@ -32,6 +32,9 @@ class TrainingPanel:
         # Create the panel
         self.frame = ttk.Frame(parent, padding="10")
         self.create_widgets()
+        
+        # Setup cleanup on destroy
+        self.frame.bind('<Destroy>', self.on_destroy)
     
     def create_widgets(self):
         """Create the panel widgets with left controls and right plot."""
@@ -175,6 +178,9 @@ class TrainingPanel:
         self.stop_button = ttk.Button(button_frame, text="Stop Training", command=self.stop_training, state="disabled")
         self.stop_button.pack(side="left", padx=(0, 5))
         
+        # Manual repaint button for emergency use
+        ttk.Button(button_frame, text="🔄 Repaint", command=self.manual_repaint).pack(side="left", padx=(0, 5))
+        
         ttk.Button(button_frame, text="Reset Progress", command=self.reset_progress).pack(side="right")
     
     def create_right_panel(self, parent):
@@ -195,29 +201,11 @@ class TrainingPanel:
         
         # Create canvas
         self.canvas = FigureCanvasTkAgg(self.fig, plot_frame)
-        self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
         
-        # Add toolbar
-        toolbar_frame = ttk.Frame(plot_frame)
-        toolbar_frame.pack(fill="x")
-        
-        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbar_frame)
-        self.toolbar.update()
-        
-        # Plot controls
-        plot_controls_frame = ttk.Frame(plot_frame)
-        plot_controls_frame.pack(fill="x", pady=(10, 0))
-        
-        # Auto-scale checkbox
+        # Add auto-scale checkbox
         self.auto_scale_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(plot_controls_frame, text="Auto-scale", variable=self.auto_scale_var).pack(side="left")
-        
-        # Clear plot button
-        ttk.Button(plot_controls_frame, text="Clear Plot", command=self.clear_plot).pack(side="right")
-        
-        # Save plot button
-        ttk.Button(plot_controls_frame, text="Save Plot", command=self.save_plot).pack(side="right", padx=(0, 5))
+        ttk.Checkbutton(plot_frame, text="Auto-scale plot", variable=self.auto_scale_var).pack(anchor="w", pady=(5, 0))
     
     def start_training(self):
         """Start training process."""
@@ -259,10 +247,26 @@ class TrainingPanel:
     
     def stop_training(self):
         """Stop training process."""
-        self.app.stop_training()
-        self.is_training = False
-        self.start_button.config(state="normal")
-        self.stop_button.config(state="disabled")
+        try:
+            # Stop the live plotting thread
+            self.is_training = False
+            
+            # Wait a bit for the thread to finish
+            if hasattr(self, 'plotting_thread') and self.plotting_thread.is_alive():
+                self.plotting_thread.join(timeout=2.0)
+            
+            # Stop the app training
+            self.app.stop_training()
+            
+            # Reset UI state
+            self.start_button.config(state="normal")
+            self.stop_button.config(state="disabled")
+            
+            # Force a final plot update
+            self.update_plot()
+            
+        except Exception as e:
+            self.logger.error(f"Error stopping training: {e}")
     
     def reset_progress(self):
         """Reset training progress."""
@@ -311,8 +315,8 @@ class TrainingPanel:
         """Live plotting loop that updates the plot during training."""
         while self.is_training:
             try:
-                # Update plot every 0.5 seconds
-                time.sleep(0.5)
+                # Update plot every 1 second (less frequent to reduce UI stress)
+                time.sleep(1.0)
                 
                 # Check if we have new data to plot
                 if hasattr(self.app, 'training_integration') and self.app.training_integration:
@@ -325,28 +329,74 @@ class TrainingPanel:
                         
                         # Update plot if we have new data
                         if current_loss is not None and current_epoch > 0:
-                            self.add_data_point(current_epoch, current_loss, current_val_loss)
+                            # Use after_idle instead of after(0) for better thread safety
+                            # Add additional validation before scheduling update
+                            if hasattr(self, 'frame') and self.frame.winfo_exists():
+                                if hasattr(self, 'fig') and self.fig is not None:
+                                    try:
+                                        # Quick check if figure is still valid
+                                        if hasattr(self.fig, 'canvas') and self.fig.canvas:
+                                            self.parent.after_idle(self.add_data_point, current_epoch, current_loss, current_val_loss)
+                                    except:
+                                        # Figure is invalid, stop plotting
+                                        self.logger.warning("Figure is invalid, stopping live plotting")
+                                        self.is_training = False
+                                        break
                 
             except Exception as e:
                 self.logger.error(f"Error in live plotting: {e}")
-                break
+                # Don't break the loop, just continue
+                continue
     
     def add_data_point(self, epoch, loss, val_loss=None):
         """Add a data point to the plot."""
-        if epoch not in self.epochs:
-            self.epochs.append(epoch)
-            self.train_losses.append(loss)
-            if val_loss is not None:
-                self.val_losses.append(val_loss)
-            else:
-                self.val_losses.append(None)
-            
-            # Update plot in main thread
-            self.parent.after(0, self.update_plot)
+        try:
+            if epoch not in self.epochs:
+                self.epochs.append(epoch)
+                self.train_losses.append(loss)
+                if val_loss is not None:
+                    self.val_losses.append(val_loss)
+                else:
+                    self.val_losses.append(None)
+                
+                # Update plot in main thread using after_idle for better safety
+                self.parent.after_idle(self.update_plot)
+                
+        except Exception as e:
+            self.logger.error(f"Error adding data point: {e}")
     
     def update_plot(self):
         """Update the matplotlib plot."""
         try:
+            # Check if the frame still exists
+            if not hasattr(self, 'frame') or not self.frame.winfo_exists():
+                self.logger.warning("Frame no longer exists, stopping plot updates")
+                return
+            
+            # Check if the canvas still exists
+            if not hasattr(self, 'canvas') or not self.canvas.get_tk_widget().winfo_exists():
+                self.logger.warning("Canvas no longer exists, stopping plot updates")
+                return
+            
+            # Check if the figure is valid
+            if not hasattr(self, 'fig') or self.fig is None:
+                self.logger.warning("Figure is None, stopping plot updates")
+                return
+            
+            # Check if the figure has been destroyed
+            try:
+                if not self.fig.canvas:
+                    self.logger.warning("Figure canvas is None, stopping plot updates")
+                    return
+            except:
+                self.logger.warning("Figure is invalid, stopping plot updates")
+                return
+            
+            # Check if the axes is valid
+            if not hasattr(self, 'ax') or self.ax is None:
+                self.logger.warning("Axes is None, stopping plot updates")
+                return
+            
             self.ax.clear()
             
             if self.epochs:
@@ -369,12 +419,27 @@ class TrainingPanel:
                 if self.auto_scale_var.get():
                     self.ax.relim()
                     self.ax.autoscale_view()
-                
-                # Update canvas
-                self.canvas.draw()
+            
+            # Update canvas with comprehensive error handling
+            try:
+                # Check if canvas is still valid before drawing
+                if hasattr(self.canvas, 'get_tk_widget') and self.canvas.get_tk_widget().winfo_exists():
+                    # Check if figure is still valid
+                    if hasattr(self.fig, 'canvas') and self.fig.canvas:
+                        self.canvas.draw()
+                        self.canvas.flush_events()
+                    else:
+                        self.logger.warning("Figure canvas is invalid, skipping draw")
+                else:
+                    self.logger.warning("Canvas widget is invalid, skipping draw")
+                    
+            except Exception as canvas_error:
+                self.logger.error(f"Error updating canvas: {canvas_error}")
+                # Don't let canvas errors crash the UI
                 
         except Exception as e:
             self.logger.error(f"Error updating plot: {e}")
+            # Don't let plot errors crash the UI
     
     def get_training_params(self):
         """Get training parameters from the UI."""
@@ -396,16 +461,123 @@ class TrainingPanel:
     
     def update_progress(self, epoch, loss, val_loss, progress):
         """Update training progress display."""
-        self.epoch_var.set(f"Epoch: {epoch}")
-        self.loss_var.set(f"Loss: {loss:.6f}")
-        self.val_loss_var.set(f"Validation Loss: {val_loss:.6f}")
-        self.progress_var.set(progress)
-        
-        # Add data point to plot
-        self.add_data_point(epoch, loss, val_loss)
-        
-        # Re-enable start button when training completes
-        if progress >= 100:
+        try:
+            self.epoch_var.set(f"Epoch: {epoch}")
+            self.loss_var.set(f"Loss: {loss:.6f}")
+            if val_loss is not None:
+                self.val_loss_var.set(f"Validation Loss: {val_loss:.6f}")
+            else:
+                self.val_loss_var.set("Validation Loss: N/A")
+            self.progress_var.set(progress)
+            
+            # Add data point to plot
+            self.add_data_point(epoch, loss, val_loss)
+            
+            # Handle training completion
+            if progress >= 100:
+                # Training is complete
+                self.logger.info(f"Training completed, updating UI... (file: {getattr(self.app, 'current_data_file', None)}, format: {getattr(self.app, 'data_manager', None) and self.app.data_manager.parent_gui.file_utils.get_file_format(getattr(self.app, 'current_data_file', '')) if getattr(self.app, 'data_manager', None) and hasattr(self.app, 'parent_gui') else 'unknown'})")
+                
+                # Reset training state
+                self.is_training = False
+                
+                # Update button states
+                self.start_button.config(state="normal")
+                self.stop_button.config(state="disabled")
+                
+                # Ensure the plot is updated one final time
+                self.update_plot()
+                
+                # Force UI update
+                if hasattr(self, 'frame') and self.frame.winfo_exists():
+                    self.frame.update_idletasks()
+                
+                self.logger.info("Training completion UI update completed")
+                
+        except Exception as e:
+            self.logger.error(f"Error updating progress: {e}")
+            # Try to recover by forcing a basic update
+            try:
+                if hasattr(self, 'frame') and self.frame.winfo_exists():
+                    self.frame.update_idletasks()
+            except:
+                pass
+    
+    def reset_training_state(self):
+        """Reset the training panel state after completion."""
+        try:
+            self.logger.info("=== STARTING TRAINING PANEL RESET ===")
+            
+            # Safely stop live plotting
+            self.logger.info("Stopping live plotting...")
+            self.stop_live_plotting()
+            
+            # Reset training state
+            self.logger.info("Resetting training state...")
             self.is_training = False
+            
+            # Reset UI state
+            self.logger.info("Resetting UI state...")
             self.start_button.config(state="normal")
-            self.stop_button.config(state="disabled") 
+            self.stop_button.config(state="disabled")
+            
+            # Update the plot normally
+            self.logger.info("Updating plot...")
+            self.update_plot()
+            
+            # Simple update without forced repaint
+            if hasattr(self, 'frame') and self.frame.winfo_exists():
+                self.frame.update_idletasks()
+            
+            # Log successful reset
+            self.logger.info("Training panel state reset successfully")
+            self.logger.info("=== TRAINING PANEL RESET COMPLETED ===")
+        
+        except Exception as e:
+            self.logger.error(f"Error resetting training state: {e}")
+            import traceback
+            self.logger.error(f"Reset error traceback: {traceback.format_exc()}")
+    
+    def _force_panel_repaint(self):
+        """Simple panel update without forced repaint."""
+        try:
+            # Just do a simple update
+            if hasattr(self, 'frame') and self.frame.winfo_exists():
+                self.frame.update_idletasks()
+        except Exception as e:
+            self.logger.error(f"Error in simple panel update: {e}")
+    
+    def manual_repaint(self):
+        """Simple manual update of the training panel."""
+        try:
+            self.logger.info("Manual update triggered")
+            if hasattr(self, 'frame') and self.frame.winfo_exists():
+                self.frame.update_idletasks()
+            self.logger.info("Manual update completed")
+        except Exception as e:
+            self.logger.error(f"Error in manual update: {e}")
+    
+    def stop_live_plotting(self):
+        """Safely stop the live plotting thread."""
+        try:
+            self.is_training = False
+            if hasattr(self, 'plotting_thread') and self.plotting_thread.is_alive():
+                self.plotting_thread.join(timeout=2.0)
+                
+            # Ensure any pending plot updates are cancelled
+            if hasattr(self, 'parent') and self.parent:
+                try:
+                    # Cancel any pending after_idle calls
+                    self.parent.after_cancel('all')
+                except:
+                    pass
+                    
+        except Exception as e:
+            self.logger.error(f"Error stopping live plotting: {e}")
+    
+    def on_destroy(self, event):
+        """Handle panel destruction."""
+        try:
+            self.stop_live_plotting()
+        except Exception as e:
+            self.logger.error(f"Error during panel cleanup: {e}") 
