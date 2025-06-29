@@ -200,16 +200,63 @@ class Floating3DWindow:
         self.ax.clear()
         
         if self.training_data is not None and len(self.training_data.columns) >= 3:
-            # Use actual training data
-            x = self.training_data.iloc[:, 0].values
-            y = self.training_data.iloc[:, 1].values
-            z = self.training_data.iloc[:, 2].values
+            # Use actual training data, but ensure we have numeric columns
+            numeric_columns = self.training_data.select_dtypes(include=[np.number]).columns
+            
+            if len(numeric_columns) >= 3:
+                # Use the first 3 numeric columns
+                x = self.training_data[numeric_columns[0]].values
+                y = self.training_data[numeric_columns[1]].values
+                z = self.training_data[numeric_columns[2]].values
+                
+                # Set labels based on column names
+                x_label = numeric_columns[0]
+                y_label = numeric_columns[1]
+                z_label = numeric_columns[2]
+            else:
+                # Not enough numeric columns, generate sample data
+                self.logger.warning(f"Not enough numeric columns for 3D scatter plot. Found {len(numeric_columns)} numeric columns, need 3.")
+                n_points = 100
+                x = np.random.randn(n_points)
+                y = np.random.randn(n_points)
+                z = np.random.randn(n_points)
+                x_label = 'X Axis'
+                y_label = 'Y Axis'
+                z_label = 'Z Axis'
         else:
             # Generate sample data
             n_points = 100
             x = np.random.randn(n_points)
             y = np.random.randn(n_points)
             z = np.random.randn(n_points)
+            x_label = 'X Axis'
+            y_label = 'Y Axis'
+            z_label = 'Z Axis'
+        
+        # Ensure all data is numeric and finite
+        try:
+            x = np.asarray(x, dtype=float)
+            y = np.asarray(y, dtype=float)
+            z = np.asarray(z, dtype=float)
+            
+            # Remove any NaN or infinite values
+            valid_mask = np.isfinite(x) & np.isfinite(y) & np.isfinite(z)
+            if not np.all(valid_mask):
+                self.logger.warning(f"Removing {np.sum(~valid_mask)} non-finite values from plot data")
+                x = x[valid_mask]
+                y = y[valid_mask]
+                z = z[valid_mask]
+                
+        except (ValueError, TypeError) as e:
+            self.logger.error(f"Error converting data to numeric: {e}")
+            # Fallback to sample data
+            n_points = 100
+            x = np.random.randn(n_points)
+            y = np.random.randn(n_points)
+            z = np.random.randn(n_points)
+            x_label = 'X Axis'
+            y_label = 'Y Axis'
+            z_label = 'Z Axis'
         
         # Get plot parameters with defaults
         point_size = self.plot_params.get('point_size', 50)
@@ -226,9 +273,9 @@ class Floating3DWindow:
         self.fig.colorbar(scatter, ax=self.ax, shrink=0.5, aspect=5)
         
         # Set labels
-        self.ax.set_xlabel('X Axis')
-        self.ax.set_ylabel('Y Axis')
-        self.ax.set_zlabel('Z Axis')
+        self.ax.set_xlabel(x_label)
+        self.ax.set_ylabel(y_label)
+        self.ax.set_zlabel(z_label)
         self.ax.set_title('3D Scatter Plot')
         
         # Set view
@@ -298,7 +345,7 @@ class Floating3DWindow:
             if viz_dir not in sys.path:
                 sys.path.insert(0, viz_dir)
             
-            from gradient_descent_3d import GradientDescentVisualizer
+            from gradient_descent_3d import GradientDescentVisualizer, extract_weight_by_index
             
             # Get gradient descent parameters
             w1_range = self.plot_params.get('w1_range', [-2.0, 2.0])
@@ -356,8 +403,8 @@ class Floating3DWindow:
                 
                 for i, weight in enumerate(weights):
                     try:
-                        w1_val = gd_viz.extract_weight_by_index(weight, w1_index, 'W1')
-                        w2_val = gd_viz.extract_weight_by_index(weight, w2_index, 'W2')
+                        w1_val = extract_weight_by_index(weight, w1_index, 'W1')
+                        w2_val = extract_weight_by_index(weight, w2_index, 'W2')
                         
                         # Clamp values to visualization bounds
                         w1_val = np.clip(w1_val, w1_range[0], w1_range[1])
@@ -404,14 +451,53 @@ class Floating3DWindow:
         self.ax.clear()
         
         if self.training_data is not None and len(self.training_data.columns) >= 2:
-            # Use actual training data
-            x = self.training_data.iloc[:, 0].values
-            y = self.training_data.iloc[:, 1].values
+            # Use actual training data, but ensure we have numeric columns
+            numeric_columns = self.training_data.select_dtypes(include=[np.number]).columns
+            
+            if len(numeric_columns) >= 2:
+                # Use the first 2 numeric columns
+                x = self.training_data[numeric_columns[0]].values
+                y = self.training_data[numeric_columns[1]].values
+                
+                # Set labels based on column names
+                x_label = numeric_columns[0]
+                y_label = numeric_columns[1]
+            else:
+                # Not enough numeric columns, generate sample data
+                self.logger.warning(f"Not enough numeric columns for 2D scatter plot. Found {len(numeric_columns)} numeric columns, need 2.")
+                n_points = 100
+                x = np.random.randn(n_points)
+                y = np.random.randn(n_points)
+                x_label = 'X Axis'
+                y_label = 'Y Axis'
         else:
             # Generate sample data
             n_points = 100
             x = np.random.randn(n_points)
             y = np.random.randn(n_points)
+            x_label = 'X Axis'
+            y_label = 'Y Axis'
+        
+        # Ensure all data is numeric and finite
+        try:
+            x = np.asarray(x, dtype=float)
+            y = np.asarray(y, dtype=float)
+            
+            # Remove any NaN or infinite values
+            valid_mask = np.isfinite(x) & np.isfinite(y)
+            if not np.all(valid_mask):
+                self.logger.warning(f"Removing {np.sum(~valid_mask)} non-finite values from plot data")
+                x = x[valid_mask]
+                y = y[valid_mask]
+                
+        except (ValueError, TypeError) as e:
+            self.logger.error(f"Error converting data to numeric: {e}")
+            # Fallback to sample data
+            n_points = 100
+            x = np.random.randn(n_points)
+            y = np.random.randn(n_points)
+            x_label = 'X Axis'
+            y_label = 'Y Axis'
         
         # Create 2D scatter plot
         scatter = self.ax.scatter(x, y, 
@@ -424,8 +510,8 @@ class Floating3DWindow:
         self.fig.colorbar(scatter, ax=self.ax, shrink=0.5, aspect=5)
         
         # Set labels
-        self.ax.set_xlabel('X Axis')
-        self.ax.set_ylabel('Y Axis')
+        self.ax.set_xlabel(x_label)
+        self.ax.set_ylabel(y_label)
         self.ax.set_title('2D Scatter Plot')
         
         # Remove z-axis for 2D plot
@@ -537,7 +623,6 @@ class Floating3DWindow:
         save_frame.pack(side="right")
         
         ttk.Button(save_frame, text="Save Plot", command=self.save_plot).pack(side="left", padx=(0, 5))
-        ttk.Button(save_frame, text="Save Animation (MP4)", command=self.save_animation_mp4).pack(side="left", padx=(0, 5))
         ttk.Button(save_frame, text="Save Animation (GIF)", command=self.save_animation_gif).pack(side="left", padx=(0, 5))
         ttk.Button(save_frame, text="Close", command=self.close).pack(side="left")
     
@@ -605,47 +690,6 @@ class Floating3DWindow:
         except Exception as e:
             self.logger.error(f"Error saving plot: {e}")
             messagebox.showerror("Error", f"Failed to save plot: {e}")
-    
-    def save_animation_mp4(self):
-        """Save a 360-frame rotation animation as MP4 (MPEG4) using ffmpeg writer."""
-        try:
-            from tkinter import filedialog
-            import matplotlib.animation as animation
-            
-            # Ask user for save location
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            plot_type = self.plot_params['plot_type'].replace(" ", "_").lower()
-            default_filename = f"3d_plot_{plot_type}_{timestamp}.mp4"
-            plots_dir = os.path.join(self.model_path, "plots")
-            os.makedirs(plots_dir, exist_ok=True)
-            default_path = os.path.join(plots_dir, default_filename)
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".mp4",
-                initialfile=default_filename,
-                initialdir=plots_dir,
-                filetypes=[("MP4 files", "*.mp4"), ("All files", "*.*")]
-            )
-            if not file_path:
-                return
-            # Create animation
-            anim = animation.FuncAnimation(
-                self.fig, self.animate_frame,
-                frames=360,  # Full rotation
-                interval=50,  # 20 FPS
-                repeat=False
-            )
-            # Try to use ffmpeg writer
-            try:
-                Writer = animation.writers['ffmpeg']
-                writer = Writer(fps=20, metadata=dict(artist='3D Plot Animation'), bitrate=1800)
-                anim.save(file_path, writer=writer, dpi=100)
-                messagebox.showinfo("Success", f"Animation saved to:\n{file_path}")
-            except Exception as ffmpeg_error:
-                self.logger.error(f"Error saving MP4 animation: {ffmpeg_error}")
-                messagebox.showerror("Error", f"Failed to save MP4 animation.\nError: {ffmpeg_error}\n\nMake sure ffmpeg is installed and available in your PATH.")
-        except Exception as e:
-            self.logger.error(f"Error in save_animation_mp4: {e}")
-            messagebox.showerror("Error", f"Failed to save animation: {e}")
     
     def save_animation_gif(self):
         """Save a 360-frame rotation animation as GIF using matplotlib's pillow writer."""
