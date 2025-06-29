@@ -8,16 +8,16 @@ import os
 import logging
 from datetime import datetime
 
-from stock_prediction_gui.ui.widgets.data_panel import DataPanel
-from stock_prediction_gui.ui.widgets.training_panel import TrainingPanel
-from stock_prediction_gui.ui.widgets.prediction_panel import PredictionPanel
-from stock_prediction_gui.ui.widgets.results_panel import ResultsPanel
-from stock_prediction_gui.ui.widgets.control_plots_panel import ControlPlotsPanel
-from stock_prediction_gui.ui.dialogs.settings_dialog import SettingsDialog
-from stock_prediction_gui.ui.dialogs.help_dialog import HelpDialog
+from .widgets.data_panel import DataPanel
+from .widgets.training_panel import TrainingPanel
+from .widgets.prediction_panel import PredictionPanel
+from .widgets.results_panel import ResultsPanel
+from .widgets.control_plots_panel import ControlPlotsPanel
+from .dialogs.settings_dialog import SettingsDialog
+from .dialogs.help_dialog import HelpDialog
 
 # Import colorblind-friendly color scheme
-from stock_prediction_gui.utils.color_scheme import ColorScheme
+from ..utils.color_scheme import ColorScheme
 
 class MainWindow:
     """Main window class."""
@@ -187,7 +187,12 @@ class MainWindow:
     
     def refresh_models(self):
         """Refresh model list."""
-        self.app.refresh_models()
+        # DISABLED: Automatic model list updates to prevent segmentation faults
+        # Users can manually refresh models using the refresh button in prediction panel
+        # self.app.refresh_models()
+        
+        # Just log that manual refresh is available
+        self.logger.info("Manual model refresh available in Prediction tab")
     
     def show_settings(self):
         """Show settings dialog."""
@@ -247,8 +252,16 @@ Built with Python and Tkinter.
     
     def update_model_list(self, models):
         """Update the model list."""
-        self.prediction_panel.update_model_list(models)
-        self.results_panel.update_model_list(models)
+        # DISABLED: Automatic model list updates to prevent segmentation faults
+        # Users can manually refresh models using the refresh button in prediction panel
+        # self.prediction_panel.update_model_list(models)
+        # self.results_panel.update_model_list(models)
+        
+        # Just log that models are available for manual refresh
+        if models:
+            self.logger.info(f"Models available for manual refresh: {len(models)} models")
+        else:
+            self.logger.info("No models available for manual refresh")
     
     def update_recent_files(self, recent_files):
         """Update recent files list."""
@@ -269,9 +282,125 @@ Built with Python and Tkinter.
     
     def training_completed(self, model_dir):
         """Handle training completion."""
-        self.update_status("Training completed successfully")
-        self.refresh_models()
-        messagebox.showinfo("Success", f"Training completed!\nModel saved to: {model_dir}")
+        try:
+            # Check if root window is still valid
+            if not hasattr(self, 'root') or not self.root.winfo_exists():
+                self.logger.warning("Root window no longer exists, skipping training completion")
+                return
+            
+            # Ensure training panel is properly reset
+            if hasattr(self, 'training_panel'):
+                self.training_panel.reset_training_state()
+            
+            # Simple update without forced repaint
+            self.root.update_idletasks()
+            
+            self.update_status("Training completed successfully")
+            
+            # REMOVED: refresh_models() call to prevent segmentation faults
+            # Users can manually refresh models using the refresh button in prediction panel
+            
+            # Schedule message box on main thread to avoid threading issues
+            self.root.after(100, lambda: self._show_training_completion_message(model_dir))
+            
+        except Exception as e:
+            import traceback
+            error_details = f"Error: {str(e)}\nTraceback: {traceback.format_exc()}"
+            self.logger.error(f"Error in training_completed: {error_details}")
+            self.update_status("Training completed with errors")
+            
+            # Schedule warning message on main thread
+            self.root.after(200, lambda: self._show_training_completion_warning(str(e)))
+    
+    def _show_training_completion_message(self, model_dir):
+        """Show training completion message box safely."""
+        try:
+            messagebox.showinfo("Success", f"Training completed!\nModel saved to: {model_dir}")
+        except Exception as e:
+            self.logger.warning(f"Could not show success message box: {e}")
+            # Fallback: just update status
+            self.update_status(f"Training completed! Model: {os.path.basename(model_dir)}")
+    
+    def _show_training_completion_warning(self, error_msg):
+        """Show training completion warning message box safely."""
+        try:
+            messagebox.showwarning("Warning", f"Training completed but there were some issues: {error_msg}")
+        except Exception as e:
+            self.logger.warning(f"Could not show warning message box: {e}")
+            # Fallback: just log the error
+            self.logger.error(f"Training completion error: {error_msg}")
+    
+    def force_complete_repaint(self):
+        """Simple GUI update without forced repaint."""
+        try:
+            # Just do a simple update
+            self.root.update_idletasks()
+        except Exception as e:
+            self.logger.error(f"Error in simple GUI update: {e}")
+    
+    def _repaint_all_tabs(self):
+        """Simple tab update without forced repaint."""
+        try:
+            # Just do simple updates
+            if hasattr(self, 'data_panel') and self.data_panel and hasattr(self.data_panel, 'frame'):
+                self.data_panel.frame.update_idletasks()
+            
+            if hasattr(self, 'training_panel') and self.training_panel and hasattr(self.training_panel, 'frame'):
+                self.training_panel.frame.update_idletasks()
+            
+            if hasattr(self, 'prediction_panel') and self.prediction_panel and hasattr(self.prediction_panel, 'frame'):
+                self.prediction_panel.frame.update_idletasks()
+            
+            if hasattr(self, 'results_panel') and self.results_panel and hasattr(self.results_panel, 'frame'):
+                self.results_panel.frame.update_idletasks()
+            
+            if hasattr(self, 'control_plots_panel') and self.control_plots_panel and hasattr(self.control_plots_panel, 'frame'):
+                self.control_plots_panel.frame.update_idletasks()
+                    
+        except Exception as e:
+            self.logger.error(f"Error in simple tab updates: {e}")
+    
+    def _repaint_all_canvases(self):
+        """Simple canvas update without forced repaint."""
+        try:
+            # Just do simple canvas updates
+            if hasattr(self, 'training_panel') and self.training_panel and hasattr(self.training_panel, 'canvas'):
+                try:
+                    self.training_panel.canvas.draw()
+                except Exception as e:
+                    self.logger.warning(f"Could not update training canvas: {e}")
+            
+            if hasattr(self, 'results_panel') and self.results_panel and hasattr(self.results_panel, 'canvas'):
+                try:
+                    self.results_panel.canvas.draw()
+                except Exception as e:
+                    self.logger.warning(f"Could not update results canvas: {e}")
+            
+            if hasattr(self, 'control_plots_panel') and self.control_plots_panel and hasattr(self.control_plots_panel, 'canvas'):
+                try:
+                    self.control_plots_panel.canvas.draw()
+                except Exception as e:
+                    self.logger.warning(f"Could not update control plots canvas: {e}")
+                        
+        except Exception as e:
+            self.logger.error(f"Error in simple canvas updates: {e}")
+    
+    def refresh_all_displays(self):
+        """Refresh all displays with simple updates."""
+        try:
+            self.logger.info("Refreshing all displays...")
+            
+            # Refresh model lists
+            self.refresh_models()
+            
+            # Simple update
+            self.root.update_idletasks()
+            
+            # Update status
+            self.update_status("All displays refreshed")
+            
+        except Exception as e:
+            self.logger.error(f"Error refreshing displays: {e}")
     
     def training_failed(self, error):
         """Handle training failure."""
