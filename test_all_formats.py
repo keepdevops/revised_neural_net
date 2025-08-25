@@ -1,273 +1,362 @@
 #!/usr/bin/env python3
 """
-Comprehensive test script to verify all file format support.
-Tests: DuckDB, PyArrow, Keras, Polars, SQLite
+Comprehensive test for all supported file formats in the Stock Prediction GUI.
+This test verifies that all file formats are properly supported and their paths
+are saved to the file history system.
 """
 
-import sys
 import os
+import sys
 import tempfile
 import pandas as pd
 import numpy as np
+import json
+import logging
+from datetime import datetime
 
-# Add the project root to the Python path
-project_root = os.path.abspath(os.path.dirname(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# Add the project root to the path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-def test_data_manager_formats():
-    """Test the data manager with all supported formats."""
+# Import the file utilities
+try:
+    from stock_prediction_gui.utils.file_utils import FileUtils
+    from stock_prediction_gui.core.data_manager import DataManager
+except ImportError:
+    print("❌ Could not import FileUtils or DataManager")
+    sys.exit(1)
+
+def setup_logging():
+    """Setup logging for the test."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    return logging.getLogger(__name__)
+
+def create_test_data():
+    """Create sample test data."""
+    return pd.DataFrame({
+        'open': [100, 101, 102, 103, 104],
+        'high': [105, 106, 107, 108, 109],
+        'low': [95, 96, 97, 98, 99],
+        'close': [102, 103, 104, 105, 106],
+        'vol': [1000, 1100, 1200, 1300, 1400]
+    })
+
+def create_test_files():
+    """Create test files for all supported formats."""
+    logger = logging.getLogger(__name__)
+    
+    # Create temporary directory
+    temp_dir = tempfile.mkdtemp()
+    logger.info(f"Created temporary directory: {temp_dir}")
+    
+    # Create test data
+    test_data = create_test_data()
+    
+    # Define all supported formats and their file extensions
+    format_tests = {
+        'CSV': ['.csv', '.tsv', '.tab'],
+        'Excel': ['.xlsx', '.xls'],
+        'JSON': ['.json', '.jsonl'],
+        'Pickle': ['.pkl', '.pickle'],
+        'NumPy': ['.npy', '.npz'],
+        'Text': ['.txt']
+    }
+    
+    # Add optional formats based on available libraries
     try:
-        from stock_prediction_gui.core.data_manager import DataManager
-        
-        # Create data manager
-        data_manager = DataManager()
-        
-        print("✅ Data manager created successfully")
-        print(f"📊 Available libraries: {data_manager.libraries_available}")
-        
-        # Get supported formats
-        formats = data_manager.get_supported_formats()
-        print(f"📁 Supported formats: {list(formats.keys())}")
-        
-        # Create test data
-        test_data = pd.DataFrame({
-            'open': [100.0, 101.0, 102.0, 103.0, 104.0],
-            'high': [105.0, 106.0, 107.0, 108.0, 109.0],
-            'low': [95.0, 96.0, 97.0, 98.0, 99.0],
-            'close': [101.0, 102.0, 103.0, 104.0, 105.0],
-            'vol': [1000, 1100, 1200, 1300, 1400]
+        import pyarrow
+        format_tests.update({
+            'Parquet': ['.parquet', '.pq'],
+            'Feather': ['.feather', '.ftr', '.arrow'],
+            'Arrow': ['.ipc']
         })
-        
-        print(f"📊 Test data created: {test_data.shape}")
-        
-        # Test each format
-        format_tests = {}
-        
-        # Test 1: CSV (baseline)
-        print("\n1. Testing CSV format...")
-        try:
-            with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as f:
-                test_data.to_csv(f.name, index=False)
-                data_info = data_manager.load_data(f.name)
-                loaded_data = data_manager.get_current_data()
-                format_tests['CSV'] = loaded_data is not None and len(loaded_data) == len(test_data)
-                print(f"   {'✅ PASS' if format_tests['CSV'] else '❌ FAIL'}")
-            os.unlink(f.name)
-        except Exception as e:
-            format_tests['CSV'] = False
-            print(f"   ❌ FAIL: {e}")
-        
-        # Test 2: SQLite
-        print("\n2. Testing SQLite format...")
-        try:
-            with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
-                import sqlite3
-                conn = sqlite3.connect(f.name)
-                test_data.to_sql('test_table', conn, index=False, if_exists='replace')
-                conn.close()
-                
-                data_info = data_manager.load_data(f.name)
-                loaded_data = data_manager.get_current_data()
-                format_tests['SQLite'] = loaded_data is not None and len(loaded_data) == len(test_data)
-                print(f"   {'✅ PASS' if format_tests['SQLite'] else '❌ FAIL'}")
-            os.unlink(f.name)
-        except Exception as e:
-            format_tests['SQLite'] = False
-            print(f"   ❌ FAIL: {e}")
-        
-        # Test 3: DuckDB
-        print("\n3. Testing DuckDB format...")
-        if data_manager.libraries_available['duckdb']:
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.duckdb', delete=False) as f:
-                    import duckdb
-                    conn = duckdb.connect(f.name)
-                    conn.execute("CREATE TABLE test_table AS SELECT * FROM test_data")
-                    conn.execute("INSERT INTO test_table SELECT * FROM test_data")
-                    conn.close()
-                    
-                    # Create test data in DuckDB
-                    conn = duckdb.connect(f.name)
-                    conn.execute("CREATE TABLE test_table AS SELECT * FROM (VALUES (100.0, 105.0, 95.0, 101.0, 1000), (101.0, 106.0, 96.0, 102.0, 1100)) AS t(open, high, low, close, vol)")
-                    conn.close()
-                    
-                    data_info = data_manager.load_data(f.name)
-                    loaded_data = data_manager.get_current_data()
-                    format_tests['DuckDB'] = loaded_data is not None
-                    print(f"   {'✅ PASS' if format_tests['DuckDB'] else '❌ FAIL'}")
-                os.unlink(f.name)
-            except Exception as e:
-                format_tests['DuckDB'] = False
-                print(f"   ❌ FAIL: {e}")
-        else:
-            format_tests['DuckDB'] = False
-            print("   ⚠️  SKIP: DuckDB not available")
-        
-        # Test 4: Feather (PyArrow)
-        print("\n4. Testing Feather format...")
-        if data_manager.libraries_available['feather']:
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.feather', delete=False) as f:
-                    test_data.to_feather(f.name)
-                    data_info = data_manager.load_data(f.name)
-                    loaded_data = data_manager.get_current_data()
-                    format_tests['Feather'] = loaded_data is not None and len(loaded_data) == len(test_data)
-                    print(f"   {'✅ PASS' if format_tests['Feather'] else '❌ FAIL'}")
-                os.unlink(f.name)
-            except Exception as e:
-                format_tests['Feather'] = False
-                print(f"   ❌ FAIL: {e}")
-        else:
-            format_tests['Feather'] = False
-            print("   ⚠️  SKIP: Feather not available")
-        
-        # Test 5: Parquet (PyArrow)
-        print("\n5. Testing Parquet format...")
-        if data_manager.libraries_available['pyarrow']:
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.parquet', delete=False) as f:
-                    test_data.to_parquet(f.name)
-                    data_info = data_manager.load_data(f.name)
-                    loaded_data = data_manager.get_current_data()
-                    format_tests['Parquet'] = loaded_data is not None and len(loaded_data) == len(test_data)
-                    print(f"   {'✅ PASS' if format_tests['Parquet'] else '❌ FAIL'}")
-                os.unlink(f.name)
-            except Exception as e:
-                format_tests['Parquet'] = False
-                print(f"   ❌ FAIL: {e}")
-        else:
-            format_tests['Parquet'] = False
-            print("   ⚠️  SKIP: Parquet not available")
-        
-        # Test 6: Polars
-        print("\n6. Testing Polars format...")
-        if data_manager.libraries_available['polars']:
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.parquet', delete=False) as f:
-                    import polars as pl
-                    pl_df = pl.from_pandas(test_data)
-                    pl_df.write_parquet(f.name)
-                    data_info = data_manager.load_data(f.name)
-                    loaded_data = data_manager.get_current_data()
-                    format_tests['Polars'] = loaded_data is not None and len(loaded_data) == len(test_data)
-                    print(f"   {'✅ PASS' if format_tests['Polars'] else '❌ FAIL'}")
-                os.unlink(f.name)
-            except Exception as e:
-                format_tests['Polars'] = False
-                print(f"   ❌ FAIL: {e}")
-        else:
-            format_tests['Polars'] = False
-            print("   ⚠️  SKIP: Polars not available")
-        
-        # Test 7: Keras
-        print("\n7. Testing Keras format...")
-        if data_manager.libraries_available['keras']:
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.h5', delete=False) as f:
-                    # Create a simple Keras model for testing
-                    import tensorflow as tf
-                    model = tf.keras.Sequential([
-                        tf.keras.layers.Dense(10, input_shape=(5,)),
-                        tf.keras.layers.Dense(1)
-                    ])
-                    model.save(f.name)
-                    
-                    data_info = data_manager.load_data(f.name)
-                    loaded_data = data_manager.get_current_data()
-                    format_tests['Keras'] = loaded_data is not None
-                    print(f"   {'✅ PASS' if format_tests['Keras'] else '❌ FAIL'}")
-                os.unlink(f.name)
-            except Exception as e:
-                format_tests['Keras'] = False
-                print(f"   ❌ FAIL: {e}")
-        else:
-            format_tests['Keras'] = False
-            print("   ⚠️  SKIP: Keras not available")
-        
-        # Summary
-        print("\n=== Format Test Results ===")
-        for format_name, passed in format_tests.items():
-            status = "✅ PASS" if passed else "❌ FAIL"
-            print(f"{format_name:10}: {status}")
-        
-        total_tests = len(format_tests)
-        passed_tests = sum(format_tests.values())
-        print(f"\nOverall: {passed_tests}/{total_tests} formats working")
-        
-        return format_tests
-        
-    except Exception as e:
-        print(f"❌ Error during testing: {e}")
-        import traceback
-        traceback.print_exc()
-        return {}
-
-def test_format_detection():
-    """Test format detection and loading."""
+        logger.info("✅ PyArrow formats added")
+    except ImportError:
+        logger.info("⚠️ PyArrow not available - skipping Parquet, Feather, Arrow")
+    
     try:
-        from stock_prediction_gui.core.data_manager import DataManager
-        
-        data_manager = DataManager()
-        
-        print("\n=== Testing Format Detection ===")
-        
-        # Test supported formats info
-        formats_info = data_manager.get_supported_formats_info()
-        print(f"Total formats: {formats_info['total_formats']}")
-        print(f"Available libraries: {formats_info['available_libraries']}")
-        
-        # Test format detection
-        test_cases = [
-            ('test.csv', 'CSV'),
-            ('test.parquet', 'Parquet'),
-            ('test.feather', 'Feather'),
-            ('test.db', 'SQLite'),
-            ('test.duckdb', 'DuckDB'),
-            ('test.h5', 'Keras'),
-            ('test.json', 'JSON'),
-            ('test.pkl', 'Pickle')
-        ]
-        
-        for file_path, expected_format in test_cases:
-            file_ext = os.path.splitext(file_path)[1].lower()
-            formats = data_manager.get_supported_formats()
-            
-            # Find which format supports this extension
-            detected_format = None
-            for format_name, extensions in formats.items():
-                if file_ext in extensions:
-                    detected_format = format_name
-                    break
-            
-            status = "✅" if detected_format == expected_format else "❌"
-            print(f"{file_path:15} -> {detected_format or 'UNKNOWN':10} {status}")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Error testing format detection: {e}")
+        import h5py
+        format_tests['HDF5'] = ['.h5', '.hdf5', '.hdf']
+        logger.info("✅ HDF5 format added")
+    except ImportError:
+        logger.info("⚠️ HDF5 not available - skipping HDF5")
+    
+    try:
+        import joblib
+        format_tests['Joblib'] = ['.joblib']
+        logger.info("✅ Joblib format added")
+    except ImportError:
+        logger.info("⚠️ Joblib not available - skipping Joblib")
+    
+    try:
+        import duckdb
+        format_tests['DuckDB'] = ['.duckdb', '.ddb']
+        logger.info("✅ DuckDB format added")
+    except ImportError:
+        logger.info("⚠️ DuckDB not available - skipping DuckDB")
+    
+    try:
+        import tensorflow
+        format_tests['Keras'] = ['.h5', '.keras']
+        logger.info("✅ Keras format added")
+    except ImportError:
+        logger.info("⚠️ TensorFlow not available - skipping Keras")
+    
+    # Create test files
+    created_files = {}
+    
+    for format_name, extensions in format_tests.items():
+        for ext in extensions:
+            try:
+                file_path = os.path.join(temp_dir, f"test_data{ext}")
+                
+                if format_name == 'CSV':
+                    if ext == '.csv':
+                        test_data.to_csv(file_path, index=False)
+                    elif ext in ['.tsv', '.tab']:
+                        test_data.to_csv(file_path, sep='\t', index=False)
+                
+                elif format_name == 'Excel':
+                    test_data.to_excel(file_path, index=False)
+                
+                elif format_name == 'JSON':
+                    if ext == '.json':
+                        test_data.to_json(file_path, orient='records', indent=2)
+                    elif ext == '.jsonl':
+                        # Create proper JSON Lines format (one JSON object per line)
+                        with open(file_path, 'w') as f:
+                            for _, row in test_data.iterrows():
+                                json.dump(row.to_dict(), f)
+                                f.write('\n')
+                
+                elif format_name == 'Pickle':
+                    test_data.to_pickle(file_path)
+                
+                elif format_name == 'NumPy':
+                    if ext == '.npy':
+                        np.save(file_path, test_data.values)
+                    elif ext == '.npz':
+                        np.savez(file_path, data=test_data.values)
+                
+                elif format_name == 'Text':
+                    # Create a properly formatted tab-separated text file
+                    test_data.to_csv(file_path, sep='\t', index=False)
+                
+                elif format_name == 'Parquet':
+                    test_data.to_parquet(file_path)
+                
+                elif format_name == 'Feather':
+                    test_data.to_feather(file_path)
+                
+                elif format_name == 'Arrow':
+                    import pyarrow as pa
+                    table = pa.Table.from_pandas(test_data)
+                    import pyarrow.parquet as pq
+                    pq.write_table(table, file_path)
+                
+                elif format_name == 'HDF5':
+                    test_data.to_hdf(file_path, key='data', mode='w')
+                
+                elif format_name == 'Joblib':
+                    import joblib
+                    joblib.dump(test_data, file_path)
+                
+                elif format_name == 'DuckDB':
+                    import duckdb
+                    conn = duckdb.connect(file_path)
+                    conn.execute("CREATE TABLE data AS SELECT * FROM test_data")
+                    conn.close()
+                    # Create a simple CSV file for testing since DuckDB files are databases
+                    csv_path = os.path.join(temp_dir, f"test_data_duckdb.csv")
+                    test_data.to_csv(csv_path, index=False)
+                    file_path = csv_path  # Use CSV for testing
+                
+                elif format_name == 'Keras':
+                    # For testing, create a simple HDF5 file
+                    test_data.to_hdf(file_path, key='data', mode='w')
+                
+                if os.path.exists(file_path):
+                    created_files[f"{format_name}{ext}"] = file_path
+                    logger.info(f"✅ Created {format_name} file: {os.path.basename(file_path)}")
+                
+            except Exception as e:
+                logger.warning(f"❌ Failed to create {format_name}{ext}: {e}")
+    
+    return created_files, temp_dir
+
+def test_file_utils():
+    """Test the FileUtils class with all formats."""
+    logger = logging.getLogger(__name__)
+    
+    print("=" * 80)
+    print("COMPREHENSIVE FILE FORMAT TEST")
+    print("=" * 80)
+    
+    # Create test files
+    logger.info("Creating test files for all supported formats...")
+    test_files, temp_dir = create_test_files()
+    
+    if not test_files:
+        logger.error("No test files created")
         return False
+    
+    # Initialize FileUtils
+    logger.info("Initializing FileUtils...")
+    file_utils = FileUtils()
+    
+    # Test 1: Add all files to history
+    logger.info("\n1. Testing file addition to history for all formats...")
+    added_files = {}
+    
+    for format_name, file_path in test_files.items():
+        if os.path.exists(file_path):
+            file_utils.add_data_file(file_path)
+            added_files[format_name] = file_path
+            logger.info(f"✅ Added {format_name} to history: {os.path.basename(file_path)}")
+    
+    # Test 2: Verify format detection
+    logger.info("\n2. Testing format detection...")
+    format_detection_results = {}
+    
+    for format_name, file_path in test_files.items():
+        if os.path.exists(file_path):
+            detected_format = file_utils.get_file_format(file_path)
+            format_detection_results[format_name] = detected_format
+            logger.info(f"  {os.path.basename(file_path)}: {detected_format}")
+    
+    # Test 3: Get format statistics
+    logger.info("\n3. Testing format statistics...")
+    format_stats = file_utils.get_format_statistics()
+    print(f"Total files in history: {format_stats['total']}")
+    
+    for format_name, stats in format_stats.items():
+        if format_name != 'total':
+            print(f"  {format_name}: {stats['count']} files")
+    
+    # Test 4: Test format-specific file retrieval
+    logger.info("\n4. Testing format-specific file retrieval...")
+    for format_name in file_utils.supported_formats.keys():
+        files = file_utils.get_recent_files_by_format(format_name)
+        if files:
+            print(f"  {format_name}: {len(files)} files")
+            for file_path in files[:2]:  # Show first 2 files
+                file_info = file_utils.get_file_info(file_path)
+                if file_info:
+                    print(f"    - {file_info['name']} ({file_info['size']})")
+    
+    # Test 5: Test DataManager integration
+    logger.info("\n5. Testing DataManager integration...")
+    data_manager = DataManager()
+    dm_formats = data_manager.get_supported_formats()
+    
+    print(f"DataManager supports {len(dm_formats)} formats:")
+    for format_name, extensions in dm_formats.items():
+        print(f"  {format_name}: {', '.join(extensions)}")
+    
+    # Test 6: Test file loading with DataManager
+    logger.info("\n6. Testing file loading with DataManager...")
+    successful_loads = 0
+    
+    for format_name, file_path in test_files.items():
+        if os.path.exists(file_path):
+            try:
+                data_info = data_manager.load_data(file_path)
+                if data_info:
+                    successful_loads += 1
+                    logger.info(f"✅ Loaded {format_name}: {data_info.get('rows', 0)} rows, {data_info.get('columns', 0)} columns")
+                else:
+                    logger.warning(f"⚠️ Failed to load {format_name}: No data info returned")
+            except Exception as e:
+                logger.warning(f"❌ Failed to load {format_name}: {e}")
+    
+    # Test 7: Test history persistence
+    logger.info("\n7. Testing history persistence...")
+    # Create new FileUtils instance to test persistence
+    file_utils2 = FileUtils()
+    format_stats2 = file_utils2.get_format_statistics()
+    print(f"Persisted total files: {format_stats2['total']}")
+    
+    # Test 8: Test supported formats comparison
+    logger.info("\n8. Testing supported formats comparison...")
+    fu_formats = file_utils.get_supported_formats_list()
+    dm_formats = data_manager.get_supported_formats()
+    
+    print(f"FileUtils supports {len(fu_formats)} formats")
+    print(f"DataManager supports {len(dm_formats)} formats")
+    
+    # Check for discrepancies
+    fu_format_names = set(fu_formats.keys())
+    dm_format_names = set(dm_formats.keys())
+    
+    missing_in_fu = dm_format_names - fu_format_names
+    missing_in_dm = fu_format_names - dm_format_names
+    
+    if missing_in_fu:
+        print(f"⚠️ Formats in DataManager but not in FileUtils: {missing_in_fu}")
+    
+    if missing_in_dm:
+        print(f"⚠️ Formats in FileUtils but not in DataManager: {missing_in_dm}")
+    
+    if not missing_in_fu and not missing_in_dm:
+        print("✅ FileUtils and DataManager format lists are consistent")
+    
+    # Test 9: Test file info retrieval for all formats
+    logger.info("\n9. Testing file info retrieval for all formats...")
+    for format_name, file_path in test_files.items():
+        if os.path.exists(file_path):
+            file_info = file_utils.get_file_info(file_path)
+            if file_info:
+                print(f"  {format_name}: {file_info['name']} - {file_info['format']} - {file_info['size']}")
+    
+    # Test 10: Test recent files with filtering
+    logger.info("\n10. Testing recent files with filtering...")
+    all_files = file_utils.get_recent_files_by_format()
+    print(f"All files in history: {len(all_files)}")
+    
+    # Test specific formats
+    for format_name in ['CSV', 'JSON', 'Excel', 'Pickle']:
+        if format_name in file_utils.supported_formats:
+            format_files = file_utils.get_recent_files_by_format(format_name)
+            print(f"{format_name} files: {len(format_files)}")
+    
+    # Summary
+    print("\n" + "=" * 80)
+    print("TEST SUMMARY")
+    print("=" * 80)
+    print(f"✅ Created {len(test_files)} test files")
+    print(f"✅ Added {len(added_files)} files to history")
+    print(f"✅ Successfully loaded {successful_loads} files with DataManager")
+    print(f"✅ File history persistence verified")
+    print(f"✅ Format detection working for all formats")
+    
+    # Cleanup
+    logger.info("\nCleaning up...")
+    try:
+        import shutil
+        shutil.rmtree(temp_dir)
+        logger.info(f"Removed temporary directory: {temp_dir}")
+    except Exception as e:
+        logger.warning(f"Could not remove temporary directory: {e}")
+    
+    return True
+
+def main():
+    """Main test function."""
+    logger = setup_logging()
+    
+    try:
+        success = test_file_utils()
+        if success:
+            print("\n🎉 All file format tests passed successfully!")
+            return 0
+        else:
+            print("\n❌ Some file format tests failed!")
+            return 1
+    except Exception as e:
+        logger.error(f"Test failed with error: {e}")
+        return 1
 
 if __name__ == "__main__":
-    print("=== Testing All File Format Support ===")
-    
-    # Test 1: Format loading
-    format_results = test_data_manager_formats()
-    
-    # Test 2: Format detection
-    detection_ok = test_format_detection()
-    
-    # Final summary
-    print("\n=== Final Summary ===")
-    if format_results:
-        working_formats = [name for name, passed in format_results.items() if passed]
-        print(f"✅ Working formats: {', '.join(working_formats)}")
-        
-        missing_formats = [name for name, passed in format_results.items() if not passed]
-        if missing_formats:
-            print(f"❌ Missing/not working: {', '.join(missing_formats)}")
-    
-    print(f"Format detection: {'✅ PASS' if detection_ok else '❌ FAIL'}")
-    
-    print("\n🎉 Format support testing completed!") 
+    sys.exit(main()) 

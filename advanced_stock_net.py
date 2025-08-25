@@ -252,7 +252,7 @@ class AdvancedStockNet:
                 if self.dropout_masks[i - 1] is not None:
                     delta *= self.dropout_masks[i - 1]
     
-    def train(self, X, y, epochs=100, batch_size=32, validation_split=0.2, early_stopping_patience=10):
+    def train(self, X, y, epochs=100, batch_size=32, validation_split=0.2, early_stopping_patience=10, progress_callback=None):
         """Train the model with early stopping."""
         # Split data
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=validation_split, random_state=42)
@@ -289,6 +289,13 @@ class AdvancedStockNet:
             # Store losses
             self.training_losses.append(np.mean(train_losses))
             self.validation_losses.append(val_loss)
+            
+            # Call progress callback if provided
+            if progress_callback:
+                try:
+                    progress_callback(epoch, np.mean(train_losses), val_loss)
+                except Exception as e:
+                    print(f"Warning: Progress callback failed: {e}")
             
             # Early stopping
             if val_loss < best_val_loss:

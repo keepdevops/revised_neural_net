@@ -476,7 +476,7 @@ class StockNet:
         self.W2 += learning_rate * m_W2_corrected / (np.sqrt(v_W2_corrected) + self.epsilon)
         self.b2 += learning_rate * m_b2_corrected / (np.sqrt(v_b2_corrected) + self.epsilon)
 
-    def train(self, X, y, X_val=None, y_val=None, epochs=1000, learning_rate=0.001, batch_size=32, save_history=True, history_interval=50, patience=20):
+    def train(self, X, y, X_val=None, y_val=None, epochs=1000, learning_rate=0.001, batch_size=32, save_history=True, history_interval=50, patience=20, progress_callback=None):
         """
         Train the neural network using mini-batch gradient descent with early stopping.
         
@@ -491,6 +491,8 @@ class StockNet:
             save_history (bool): Whether to save weight history for visualization
             history_interval (int): How often to save weight history (every N epochs)
             patience (int): Number of epochs to wait for improvement before early stopping
+            progress_callback (callable): Optional callback function for progress updates
+                Should accept (epoch, train_loss, val_loss) as arguments
             
         Returns:
             tuple: (train_losses, val_losses) containing loss history
@@ -550,6 +552,13 @@ class StockNet:
             else:
                 val_losses.append(avg_mse)  # Use training loss as validation loss
                 current_mse = avg_mse
+            
+            # Call progress callback if provided
+            if progress_callback:
+                try:
+                    progress_callback(epoch, avg_mse, val_mse if X_val is not None and y_val is not None else avg_mse)
+                except Exception as e:
+                    print(f"Warning: Progress callback failed: {e}")
             
             # Save weight history less frequently to reduce memory usage
             if save_history and (epoch % history_interval == 0 or epoch == epochs - 1):
